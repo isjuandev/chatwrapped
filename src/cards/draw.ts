@@ -249,6 +249,29 @@ export function box(ctx: Ctx, t: Theme, x: number, y: number, w: number, h: numb
   else fillRR(ctx, x, y, w, h, r, C.surface);
 }
 
+/**
+ * Colores de un reparto entre dos personas (barra partida). Deben distinguirse en TODOS los temas:
+ * - fondo oscuro: acento vs. crema (antes ambos eran el acento y no se veía el reparto);
+ * - fondo claro: ink vs. el resaltado del tema, con borde ink para que no se pierda sobre el fondo.
+ */
+export function splitColors(t: Theme): { a: string; b: string; bLine: string | null } {
+  if (t.dark) return { a: t.barFill, b: t.fg, bLine: null };
+  return { a: t.barFill, b: t.hi, bLine: t.hiLine };
+}
+
+/** Punto de color para la leyenda de un reparto. */
+export function legendDot(ctx: Ctx, cx: number, cy: number, color: string, line: string | null): void {
+  ctx.beginPath();
+  ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  if (line) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = line;
+    ctx.stroke();
+  }
+}
+
 /** Caja "fuerte": rellena (ink en fondos claros, surface en oscuros). */
 export function strongBox(ctx: Ctx, t: Theme, x: number, y: number, w: number, h: number, r: number | number[] = 28): void {
   fillRR(ctx, x, y, w, h, r, t.strongBg);

@@ -1,7 +1,7 @@
 import type { WrappedData } from '../types';
 import { fmtInt, simpleFraction } from '../format';
 import {
-  CardOpts, CONTENT_W, fillRR, footer, frame, HEAD, MARGIN, pageLabel, rich, rr, strokeRR, strongBox, text, THEMES, W,
+  CardOpts, CONTENT_W, fillRR, footer, frame, HEAD, MARGIN, pageLabel, rich, rr, splitColors, strokeRR, strongBox, text, THEMES, W,
 } from './draw';
 
 /** Tarjeta 2: ¿Quién escribe más? */
@@ -32,10 +32,16 @@ export function drawCard2(ctx: CanvasRenderingContext2D, data: WrappedData, opts
     ctx.save();
     rr(ctx, MARGIN, by, CONTENT_W, bh, 24);
     ctx.clip();
-    ctx.fillStyle = t.trackSolid;
+    // Mismos colores de reparto que el resto de tarjetas (en oscuro: acento vs. crema; antes la
+    // segunda persona se pintaba como la pista vacía y casi no se distinguía del fondo).
+    const sc = splitColors(t);
+    ctx.fillStyle = t.dark ? sc.b : t.trackSolid;
     ctx.fillRect(MARGIN, by, CONTENT_W, bh);
-    ctx.fillStyle = t.barFill;
+    ctx.fillStyle = sc.a;
     ctx.fillRect(MARGIN, by, CONTENT_W * top.share, bh);
+    // Separación entre los dos tramos.
+    ctx.fillStyle = t.bg;
+    ctx.fillRect(MARGIN + CONTENT_W * top.share - 2, by, 4, bh);
     ctx.restore();
     if (t.line) strokeRR(ctx, MARGIN, by, CONTENT_W, bh, 24, t.line, 3);
 

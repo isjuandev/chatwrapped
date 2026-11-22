@@ -3,7 +3,7 @@ import { copyFor } from '../copy';
 import { fmtInt } from '../format';
 import { isTender } from '../metrics/phrases';
 import {
-  CardOpts, CONTENT_W, fillRR, footer, frame, HEAD, MARGIN, pageLabel, rich, strokeRR, strongBox, text, THEMES, title2, W, INK_72,
+  CardOpts, CONTENT_W, fillRR, footer, frame, HEAD, legendDot, MARGIN, measure, pageLabel, rich, splitColors, strokeRR, strongBox, text, THEMES, title2, W, INK_72,
 } from './draw';
 
 /** Disponible con ≥ 3 expresiones descubiertas del chat. */
@@ -62,18 +62,30 @@ export function drawCardPhrases(ctx: CanvasRenderingContext2D, data: WrappedData
     fillRR(ctx, MARGIN, by, CONTENT_W, bh, bh / 2, t.track);
     if (data.mode.size === 'duo' && r.byPerson.length === 2) {
       const [a, b] = r.byPerson;
-      const wa = Math.round((CONTENT_W * a.count) / Math.max(1, a.count + b.count));
-      if (a.count > 0) fillRR(ctx, MARGIN, by, Math.max(bh, wa), bh, bh / 2, t.barFill);
-      if (b.count > 0) {
-        const wb = Math.max(bh, CONTENT_W - wa);
-        fillRR(ctx, MARGIN + CONTENT_W - wb, by, wb, bh, bh / 2, t.hi);
-        if (t.hiLine) strokeRR(ctx, MARGIN + CONTENT_W - wb, by, wb, bh, bh / 2, t.hiLine, 3);
+      const sc = splitColors(t);
+      const GAP = 4; // separación visible entre los dos tramos
+      const total = Math.max(1, a.count + b.count);
+      const wa = Math.round((CONTENT_W * a.count) / total);
+      if (a.count > 0) {
+        const w = b.count > 0 ? Math.max(bh, wa - GAP / 2) : CONTENT_W;
+        fillRR(ctx, MARGIN, by, w, bh, bh / 2, sc.a);
       }
-      text(ctx, `${a.name} · ${fmtInt(a.count)}`, MARGIN, by + bh + 19, {
-        weight: 600, size: 17, color: soft, baseline: 'middle', maxWidth: CONTENT_W / 2 - 10,
+      if (b.count > 0) {
+        const wb = a.count > 0 ? Math.max(bh, CONTENT_W - wa - GAP / 2) : CONTENT_W;
+        fillRR(ctx, MARGIN + CONTENT_W - wb, by, wb, bh, bh / 2, sc.b);
+        if (sc.bLine) strokeRR(ctx, MARGIN + CONTENT_W - wb, by, wb, bh, bh / 2, sc.bLine, 3);
+      }
+      // Leyenda con el color de cada persona.
+      const ly = by + bh + 19;
+      legendDot(ctx, MARGIN + 7, ly, sc.a, null);
+      text(ctx, `${a.name} · ${fmtInt(a.count)}`, MARGIN + 20, ly, {
+        weight: 600, size: 17, color: soft, baseline: 'middle', maxWidth: CONTENT_W / 2 - 30,
       });
-      text(ctx, `${b.name} · ${fmtInt(b.count)}`, W - MARGIN, by + bh + 19, {
-        weight: 600, size: 17, color: soft, align: 'right', baseline: 'middle', maxWidth: CONTENT_W / 2 - 10,
+      const right = `${b.name} · ${fmtInt(b.count)}`;
+      const rw = Math.min(measure(ctx, right, 600, 17), CONTENT_W / 2 - 30);
+      legendDot(ctx, W - MARGIN - rw - 13, ly, sc.b, sc.bLine);
+      text(ctx, right, W - MARGIN, ly, {
+        weight: 600, size: 17, color: soft, align: 'right', baseline: 'middle', maxWidth: CONTENT_W / 2 - 30,
       });
     } else {
       fillRR(ctx, MARGIN, by, Math.max(bh, (CONTENT_W * r.count) / maxCount), bh, bh / 2, t.barFill);
