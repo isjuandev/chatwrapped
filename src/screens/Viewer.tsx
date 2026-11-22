@@ -24,6 +24,16 @@ function download(blob: Blob, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
+/** Trazos de los íconos del visor (24×24, stroke). */
+const ICON = {
+  close: 'M6 6l12 12M18 6L6 18',
+  download: 'M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14',
+  share: 'M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M6 12v6a2 2 0 002 2h8a2 2 0 002-2v-6',
+  zip: 'M4 7h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7zm0 0l2-3h12l2 3M10 11h4',
+  eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zm10 3a3 3 0 100-6 3 3 0 000 6z',
+  eyeOff: 'M3 3l18 18M10.6 5.1A10 10 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 004.2 4.2',
+};
+
 export default function Viewer({ data, onClose }: Props) {
   const [index, setIndex] = useState(1);
   const [tier, setTier] = useState<Tier>('free');
@@ -163,6 +173,12 @@ export default function Viewer({ data, onClose }: Props) {
     }
   };
 
+  const Icon = ({ d }: { d: string }) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+
   return (
     <main className="screen screen--viewer">
       <div
@@ -176,13 +192,29 @@ export default function Viewer({ data, onClose }: Props) {
       </div>
       <div className="viewer-head">
         <span aria-live="polite">
-          {full ? 'Reporte completo · ' : ''}Tarjeta {index} de {count}
+          {full ? 'Reporte completo · ' : ''}
+          {index} / {count}
         </span>
-        <button className="back" onClick={onClose} aria-label="Cerrar" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
+        <div className="viewer-head__right">
+          {full ? (
+            <button className="chip chip--accent" type="button" onClick={() => switchTier('free')}>
+              Volver a la historia
+            </button>
+          ) : (
+            <button
+              className={fullBtn.enabled ? 'chip chip--accent' : 'chip'}
+              type="button"
+              disabled={!fullBtn.enabled}
+              onClick={onFullReport}
+              title={fullBtn.label}
+            >
+              {fullBtn.enabled ? 'Reporte completo' : fullBtn.label}
+            </button>
+          )}
+          <button className="icon-btn" onClick={onClose} aria-label="Cerrar" type="button">
+            <Icon d={ICON.close} />
+          </button>
+        </div>
       </div>
 
       {notice && (
@@ -208,67 +240,71 @@ export default function Viewer({ data, onClose }: Props) {
         />
       </div>
 
-      {isQuiz && (
+      {/* Fila de altura fija: el chip del reto reserva su espacio aunque no se vea,
+          así la tarjeta no cambia de tamaño (ni "salta") al llegar al reto. */}
+      <div className="chips">
         <button
-          className="btn btn--outline reveal-btn"
+          className={hide ? 'chip chip--on' : 'chip'}
+          type="button"
+          role="switch"
+          aria-checked={hide}
+          onClick={() => setHide((h) => !h)}
+        >
+          <Icon d={hide ? ICON.eyeOff : ICON.eye} />
+          Ocultar nombres
+        </button>
+        <button
+          className={revealed ? 'chip chip--on' : 'chip'}
           type="button"
           aria-pressed={revealed}
           onClick={() => setRevealed((r) => !r)}
+          style={{ visibility: isQuiz ? 'visible' : 'hidden' }}
+          tabIndex={isQuiz ? 0 : -1}
+          aria-hidden={!isQuiz}
         >
           {revealed ? 'Ocultar respuesta' : 'Ver respuesta'}
         </button>
-      )}
-
-      <div className="toggle-row">
-        <span id="hide-label">Ocultar nombres</span>
-        <button
-          className="switch"
-          role="switch"
-          aria-checked={hide}
-          aria-labelledby="hide-label"
-          onClick={() => setHide((h) => !h)}
-          type="button"
-        />
       </div>
 
       <div className="actions">
-        <button className="btn btn--outline" onClick={() => void onDownload()} disabled={busy} type="button">
-          Descargar
-        </button>
-        <button className="btn btn--lime" onClick={() => void onShare()} disabled={busy} type="button">
+        <button className="btn btn--lime actions__share" onClick={() => void onShare()} disabled={busy} type="button">
+          <Icon d={ICON.share} />
           Compartir
         </button>
+        <button
+          className="icon-btn icon-btn--lg"
+          onClick={() => void onDownload()}
+          disabled={busy}
+          type="button"
+          aria-label="Descargar esta tarjeta"
+          title="Descargar esta tarjeta"
+        >
+          <Icon d={ICON.download} />
+        </button>
+        <button
+          className={zipProgress ? 'icon-btn icon-btn--lg icon-btn--wide' : 'icon-btn icon-btn--lg'}
+          type="button"
+          onClick={() => void onDownloadAll()}
+          disabled={busy}
+          aria-busy={zipProgress !== null}
+          aria-label={zipLabel}
+          title="Descargar todo (.zip)"
+        >
+          {zipProgress ? (
+            <span className="zip-progress">
+              {zipProgress.done}/{zipProgress.total}
+            </span>
+          ) : (
+            <>
+              <Icon d={ICON.zip} />
+              <span className="icon-btn__label">.zip</span>
+            </>
+          )}
+        </button>
       </div>
-      <button
-        className="btn btn--outline zip-btn"
-        type="button"
-        onClick={() => void onDownloadAll()}
-        disabled={busy}
-        aria-busy={zipProgress !== null}
-      >
-        {zipLabel}
-      </button>
       <p className="sr-only" role="status">
         {zipProgress ? zipLabel : ''}
       </p>
-      <button className="link" style={{ marginTop: 12 }} onClick={() => void onShare()} type="button">
-        Mándasela a quien sale en el chat
-      </button>
-
-      {full ? (
-        <button className="pay pay--open" type="button" onClick={() => switchTier('free')}>
-          Volver a la historia
-        </button>
-      ) : (
-        <button
-          className={fullBtn.enabled ? 'pay pay--open' : 'pay'}
-          type="button"
-          disabled={!fullBtn.enabled}
-          onClick={onFullReport}
-        >
-          {fullBtn.label}
-        </button>
-      )}
     </main>
   );
 }
