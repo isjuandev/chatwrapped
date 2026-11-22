@@ -95,12 +95,17 @@ export async function renderCardTo(
   ctx.restore();
 }
 
+/** PNG de un canvas ya dibujado. */
+export function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('No se pudo crear el PNG'))), 'image/png');
+  });
+}
+
 export async function cardToBlob(
   n: number, data: WrappedData, hide: boolean, reveal = false, tier: Tier = 'free',
 ): Promise<Blob> {
   const canvas = document.createElement('canvas');
   await renderCardTo(canvas, n, data, hide, reveal, tier);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('No se pudo crear el PNG'))), 'image/png');
-  });
+  return canvasToPng(canvas);
 }

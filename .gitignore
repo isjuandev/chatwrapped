@@ -10,3 +10,8 @@ _chat.txt
 
 # Local de Claude Code
 .claude/settings.local.json
+
+# Secretos locales (Umami)
+.env
+.env.*
+!.env.example

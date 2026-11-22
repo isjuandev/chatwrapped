@@ -4,6 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+# ID del sitio en Umami: Vite lo incrusta en el bundle en tiempo de build.
+# Sin valor la app compila igual y la analítica queda desactivada.
+ARG VITE_UMAMI_WEBSITE_ID=""
+ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
 RUN npm run build
 
 # ---- Runtime: nginx sirve /dist (no hay backend: el chat nunca sale del celular) ----

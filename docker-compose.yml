@@ -1,11 +1,15 @@
 # Despliegue en Coolify: crea un recurso "Docker Compose" apuntando a este repo.
 # Coolify pone el proxy (Traefik) y el HTTPS; en el servicio "web" asigna el dominio
-# https://wrapped.isjuandev.com (puerto 80). No se publican puertos en el host.
+# https://wrapped.isjuandev.com (puerto 80) y en "umami" el del panel
+# (p. ej. https://stats.wrapped.isjuandev.com, puerto 3000). No se publican puertos en el host.
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # ID del sitio en Umami. Vite lo incrusta en el build: si lo cambias, redeploy.
+        VITE_UMAMI_WEBSITE_ID: "${VITE_UMAMI_WEBSITE_ID:-}"
     restart: unless-stopped
     expose:
       - "80"
@@ -17,3 +21,50 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
+
+  # Analítica propia: sin cookies y con los datos en este servidor. La web la consume
+  # desde /medicion (proxy de nginx), así la CSP `script-src 'self'` no cambia.
+  umami:
+    image: ghcr.io/umami-software/umami:3.5.0
+    restart: unless-stopped
+    init: true
+    environment:
+      # Genera los secretos con: openssl rand -hex 32 (usa una contraseña en hex).
+      - "DATABASE_URL=postgresql://umami:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en Coolify}@db:5432/umami"
+      - "APP_SECRET=${APP_SECRET:?Define APP_SECRET en Coolify}"
+      - "TWO_FACTOR_ENCRYPTION_KEY=${TWO_FACTOR_ENCRYPTION_KEY:?Define TWO_FACTOR_ENCRYPTION_KEY en Coolify}"
+      - "DISABLE_TELEMETRY=1"
+      - "DISABLE_UPDATES=1"
+      # nginx/Traefik son proxies privados: usa la IP real del visitante.
+      - "TRUSTED_PROXIES=private"
+      # Coolify enruta el dominio del panel al puerto 3000. Protégelo con login + 2FA.
+      - SERVICE_FQDN_UMAMI_3000
+    expose:
+      - "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/api/heartbeat >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - "POSTGRES_DB=umami"
+      - "POSTGRES_USER=umami"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en Coolify}"
+    volumes:
+      - umami-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  umami-db:

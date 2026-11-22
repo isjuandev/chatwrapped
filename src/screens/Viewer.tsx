@@ -5,6 +5,8 @@ import type { Tier } from '../cards';
 import { FEATURES } from '../config';
 import { fullReportButton } from '../fullReport';
 import type { WrappedData } from '../types';
+import type { ZipProgress } from '../zipExport';
+import { deckToZip } from '../zipExport';
 
 interface Props {
   data: WrappedData;
@@ -37,6 +39,7 @@ export default function Viewer({ data, onClose }: Props) {
   const reveal = isQuiz && revealed;
   const [notice, setNotice] = useState<string | null>(data.warnings[0] ?? null);
   const [busy, setBusy] = useState(false);
+  const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
 
@@ -96,6 +99,29 @@ export default function Viewer({ data, onClose }: Props) {
       setBusy(false);
     }
   };
+
+  /** Todo el mazo visible en un .zip (mismas tarjetas, mismos ajustes). */
+  const onDownloadAll = async (): Promise<void> => {
+    setBusy(true);
+    setZipProgress({ done: 0, total: count });
+    try {
+      const zip = await deckToZip(data, { hide, reveal, tier, onProgress: setZipProgress });
+      download(zip.blob, zip.name);
+      track('download_all');
+    } catch {
+      setNotice('No pudimos preparar el .zip. Intenta de nuevo.');
+    } finally {
+      setZipProgress(null);
+      setBusy(false);
+    }
+  };
+
+  const zipLabel =
+    zipProgress === null
+      ? 'Descargar todo (.zip)'
+      : zipProgress.done === 0
+        ? 'Preparando el .zip…'
+        : `Preparando ${zipProgress.done} de ${zipProgress.total}…`;
 
   const onShare = async (): Promise<void> => {
     setBusy(true);
@@ -213,6 +239,18 @@ export default function Viewer({ data, onClose }: Props) {
           Compartir
         </button>
       </div>
+      <button
+        className="btn btn--outline zip-btn"
+        type="button"
+        onClick={() => void onDownloadAll()}
+        disabled={busy}
+        aria-busy={zipProgress !== null}
+      >
+        {zipLabel}
+      </button>
+      <p className="sr-only" role="status">
+        {zipProgress ? zipLabel : ''}
+      </p>
       <button className="link" style={{ marginTop: 12 }} onClick={() => void onShare()} type="button">
         Mándasela a quien sale en el chat
       </button>

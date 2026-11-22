@@ -552,6 +552,12 @@ button {
   font-size: 17px;
 }
 
+.zip-btn {
+  margin-top: 10px;
+  min-height: 48px;
+  font-size: 16px;
+}
+
 .pay {
   margin: 8px auto 0;
   color: var(--muted);

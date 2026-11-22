@@ -2,6 +2,8 @@ node_modules
 dist
 .git
 .claude
+.env
+.env.*
 *.zip
 !public/sample-with-stickers.zip
 WhatsApp Chat*

@@ -9,6 +9,7 @@ Lema: **"El chat nunca sale del celular; las tarjetas sí."** Cero backend con m
 - Vite + React 18 + TypeScript (strict). Sin router: máquina de estados simple en `App.tsx`.
 - CSS plano con variables (o CSS modules). Sin Tailwind.
 - `jszip` para .zip. Web Worker (`new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })`) para parseo + métricas.
+- Analítica: Umami self-hosted (PostgreSQL) con el tracker proxificado en `/medicion` (ver Fase 6).
 - Fuentes **autoalojadas** con `@fontsource` (nada de Google Fonts: privacidad). Títulos: `Inter Tight` 800 (tracking negativo, ~-0.04em). Cuerpo: `Inter` 400/500/600/700.
 - `vitest` para tests de parser y métricas.
 - Mobile‑first (diseño a 390px de ancho); en desktop centrar una columna de máx. ~440px.
@@ -27,7 +28,7 @@ Lema: **"El chat nunca sale del celular; las tarjetas sí."** Cero backend con m
 Radios grandes: botones pill (999px), tarjetas 20–28px. Burbujas de chat estilo mensaje (crema, lima, coral).
 
 ## Pantallas (app)
-1. **Portada** (p1): logo "chat wrapped" + pill "2026" (contorno lima). Tres burbujas ("¿quién escribe más?" crema izq., "obvio tú" lima der., "jajaja ya veremos" coral izq.). Título "Tu año en el chat, hecho **tarjetas** para historias." (tarjetas en lima). Subtítulo. Caja de privacidad con candado: "**Tu chat nunca sale de tu celular.** Todo se calcula en tu navegador; no guardamos nada." CTA lima "Hacer mi Chat Wrapped". Link lima subrayado "¿Cómo exporto el chat?".
+1. **Portada** (p1): logo "chat wrapped" + pill "2026" (contorno lima). Tres burbujas ("¿quién escribe más?" crema izq., "obvio tú" lima der., "jajaja ya veremos" coral izq.). Título "Tu año en el chat, hecho **tarjetas** para historias." (tarjetas en lima). Subtítulo. Caja de privacidad con candado: "**Tu chat nunca sale de tu celular.** Todo se calcula en tu navegador; tu chat no se guarda. Solo contamos visitas anónimas, sin cookies." CTA lima "Hacer mi Chat Wrapped". Link lima subrayado "¿Cómo exporto el chat?".
 2. **Modo + subir** (p2): botón atrás circular, "Paso 1 de 2". "¿Con quién es el chat?" Radios‑tarjeta: Pareja (Dos personas, premios repartidos) / Parche (Grupo de amigos) / Familia (El grupo de la familia). Seleccionada = fondo lima, texto ink. Zona de subida punteada (click + drag&drop), ícono subir lima, "Sube el chat exportado", "Archivo .txt o .zip". Link guía. Nota: "El archivo se lee en tu celular. No se sube a ningún servidor."
    - Al subir: estado de carga ("Leyendo tu chat…" — Paso 2 de 2) mientras el worker trabaja. Errores amables (archivo no reconocido, chat vacío, zip sin .txt).
    - Si modo = Pareja pero hay >2 participantes, o modo grupo con 2: avisar y continuar igual (usar el modo elegido, pero pareja requiere exactamente los 2 con más mensajes).
@@ -35,6 +36,7 @@ Radios grandes: botones pill (999px), tarjetas 20–28px. Burbujas de chat estil
 4. **Visor de tarjetas** (p4): barras de progreso tipo historias arriba (6 segmentos), "Tarjeta N de 6", botón cerrar (X circular). Tarjeta 9:16 renderizada al centro (vista previa del mismo canvas o un `<img>` del PNG). Tap derecha/izquierda o swipe para navegar; flechas de teclado en desktop. Toggle "Ocultar nombres". Botones "Descargar" (contorno) y "Compartir" (lima). Link "Mándasela a quien sale en el chat" (= compartir).
    - Compartir: `navigator.share({ files: [png] })` si `navigator.canShare` lo permite; si no, descargar.
    - Descargar: PNG `chat-wrapped-2026-N.png`.
+   - Descargar todo: botón "Descargar todo (.zip)" bajo Descargar/Compartir. Empaqueta **todas las tarjetas del mazo visible** (gratis o reporte completo), con el mismo toggle de nombres y el mismo estado de "Ver respuesta". Un zip `chat-wrapped-2026.zip` (o `chat-wrapped-2026-completo.zip`) con una carpeta del mismo nombre y archivos numerados con ceros para conservar el orden: `01-portada.png`, `02-quien-escribe-mas.png`…, `10-premios.png`. Se generan una a una (progreso "Preparando N de M…") para no llenar la memoria; como los PNG ya están comprimidos, se guardan sin recomprimir (`level: 0`). Si una tarjeta falla, no se entrega un zip a medias: aviso amable y se reintenta. Todo en el navegador.
 
 ## Tarjetas (canvas → PNG 1080×1920)
 Ver p5–p10 exactamente. Todas: "chat wrapped" arriba izq., pill "2026" arriba der., "N / 6" abajo izq. y dominio abajo der. (constante `SITE_DOMAIN` en `src/config.ts`, por defecto `"chatwrapped.co"`; la tarjeta 1 dice "Desliza para ver más" abajo izq. en vez de "1 / 6").
@@ -79,7 +81,6 @@ El worker recibe `{ fileName, bytes|text, mode }` y devuelve `{ ok: true, data: 
 
 ## Lo que NO entra (dejar ganchos)
 - Pago (Wompi/Nequi): solo un botón deshabilitado/"Próximamente" "Reporte completo" en el visor, detrás de flag `FEATURES.payments=false`.
-- Analítica: `src/analytics.ts` con `track(event, props)` no-op que solo acepta props sin datos del chat (modo, nº participantes en rango, éxito/error). Eventos: landing_view, start, upload_ok, upload_error, card_view, download, share.
 
 ## Calidad
 - `npm run build`, `npm run test`, `npm run lint` (tsc --noEmit basta) deben pasar.
@@ -289,4 +290,36 @@ Diseño: título "Lo que se dicen" (familia: "Lo que se dicen en familia"). Una 
 ## 3. Calidad
 - Tests de `discoverPhrases`: un chat sintético con regionalismos ("qué chimba", "ome", "de una", "nojoda") los descubre aunque no estén en ninguna lista; "voy a"/"de la" no salen; alargamientos se agrupan; dedupe por inclusión; mínimo de días distintos; semillas solo empujan (no aparecen si no se usan); nombres de participantes excluidos; rendimiento: 60 000 mensajes sintéticos en < 1,5 s en Node.
 - Tests: conversaciones (huecos, duración mínima, la más larga), mitades y palabras nuevas, disponibilidad de cada tarjeta, `buildDeck(data,'full')` vs `'free'` (sin mezcla), y la lógica del botón según los flags.
+- Tests de analítica: `modeKey` (modo aplanado y normalizado) y `analyticsData` (solo props seguras, sin `undefined`, sin campos libres).
 - `npm run lint`, `npm run test`, `npm run build` en verde.
+
+---
+
+# Fase 6 — Analítica de visitas (Umami self-hosted)
+
+Objetivo: saber cuántas personas entran y cómo usan el sitio, sin romper la promesa de privacidad ni la CSP.
+
+## 1. Arquitectura
+- Umami 3.5 + PostgreSQL en el mismo `docker-compose.yml` (`umami` y `db`), sin puertos publicados al host.
+- El panel vive en su propio subdominio (p. ej. `stats.wrapped.isjuandev.com`, puerto 3000), con login y 2FA.
+- El sitio consume el tracker **desde el mismo origen**: nginx proxifica `/medicion/script.js` y `/medicion/api/send` a `http://umami:3000`. Por eso `script-src 'self'` y `connect-src 'self'` no cambian y no se envía nada a terceros.
+- `resolver 127.0.0.11` + `proxy_pass` con variable: si Umami está caído, el sitio sigue arriba; solo falla la analítica y la app la ignora.
+- Sin `VITE_UMAMI_WEBSITE_ID` no se inyecta el script: desarrollo y builds sin analítica quedan no-op.
+
+## 2. Configuración (Coolify)
+1. Variables del recurso `docker-compose`: `POSTGRES_PASSWORD`, `APP_SECRET`, `TWO_FACTOR_ENCRYPTION_KEY` (cada una con `openssl rand -hex 32`) y `VITE_UMAMI_WEBSITE_ID`.
+2. Redeploy: el Website ID se incrusta en el bundle (build arg del `Dockerfile`); cambiarlo exige reconstruir.
+3. Primer arranque de Umami: usuario `admin` / `umami` (Umami obliga a cambiarla). Crear el sitio `wrapped.isjuandev.com` y copiar su Website ID.
+4. Asignar dominio al servicio `umami` (puerto 3000) y activar 2FA. El panel nunca se sirve bajo `/medicion` (esa ruta solo expone script y colector).
+
+## 3. Eventos y props
+- Eventos en `src/analytics.ts`: `landing_view`, `start`, `upload_ok`, `upload_error`, `card_view`, `download`, `download_all`, `share`, `full_report_open`.
+- `SafeProps` es la única vía: `mode` (texto `pareja|amigos-duo|amigos-grupo|familia-duo|familia-grupo`), `participants` (rango), `card`, `ok`, `error`. Nunca nombres, textos, mensajes ni conteos exactos.
+- Umami añade solo: URL, título, referrer, idioma, pantalla, país, navegador/SO y dispositivo. Sin cookies.
+- Embudo sugerido (pasos por evento): `landing_view` → `start` → `upload_ok` → `card_view` → `download` (o `download_all`/`share`).
+- Reportes para responder "quién entra y cómo lo usa": visitantes únicos, sesiones, fuentes/referrers, dispositivos, retención por cohortes, eventos y embudo.
+
+## 4. Privacidad y datos
+- Sin cookies ni identificadores personales. La IP se usa solo para geo/sesión anónima; no se guarda en claro (sal rotativa mensual por defecto, `SALT_ROTATION`).
+- Texto de portada: "Tu chat nunca sale de tu celular. Todo se calcula en tu navegador; tu chat no se guarda. Solo contamos visitas anónimas, sin cookies."
+- La base solo tiene estadísticas de visitas; nunca contenido del chat. Backup: `pg_dump` del volumen `umami-db` (si se pierde, solo se pierden estadísticas).

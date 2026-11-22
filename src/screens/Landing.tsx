@@ -37,7 +37,8 @@ export default function Landing({ onStart, onGuide }: Props) {
       <div className="privacy">
         <LockIcon />
         <p style={{ margin: 0 }}>
-          <strong>Tu chat nunca sale de tu celular.</strong> Todo se calcula en tu navegador; no guardamos nada.
+          <strong>Tu chat nunca sale de tu celular.</strong> Todo se calcula en tu navegador; tu chat no se guarda.
+          Solo contamos visitas anónimas, sin cookies.
         </p>
       </div>
 
