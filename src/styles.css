@@ -1,17 +1,18 @@
 :root {
-  --bg: #16131c;
-  --surface: #221e2c;
-  --lime: #cbf23f;
-  --coral: #ff7350;
-  --cream: #f4f1ea;
-  --ink: #16131c;
-  --muted: #a9a4b5;
-  --line: #4a4657;
-  --lime-08: rgba(203, 242, 63, 0.08);
-  --coral-14: rgba(255, 115, 80, 0.14);
-  --ink-75: rgba(22, 19, 28, 0.75);
-  --cream-10: rgba(244, 241, 234, 0.1);
-  --scrim: rgba(10, 8, 14, 0.7);
+  /* Valores iniciales = paleta activa (src/palette.ts: atardecer). main.tsx los vuelve a fijar al cargar. */
+  --bg: #1a1029;
+  --surface: #2a1d3f;
+  --lime: #ffb830;
+  --coral: #ff6b9a;
+  --cream: #fff4e8;
+  --ink: #1a1029;
+  --muted: #b9a9d0;
+  --line: #4d3d66;
+  --lime-08: rgba(255, 184, 48, 0.08);
+  --coral-14: rgba(255, 107, 154, 0.14);
+  --ink-75: rgba(26, 16, 41, 0.75);
+  --cream-10: rgba(255, 244, 232, 0.1);
+  --scrim: rgba(26, 16, 41, 0.7);
   --font-head: 'Inter Tight', Inter, system-ui, sans-serif;
   --font-body: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }

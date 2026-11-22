@@ -48,7 +48,7 @@ export const PALETTES = {
 export type PaletteId = keyof typeof PALETTES;
 
 /** Paleta activa en producción. Cámbiala aquí. */
-export const ACTIVE_PALETTE: PaletteId = 'original';
+export const ACTIVE_PALETTE: PaletteId = 'atardecer';
 
 /** En desarrollo se puede probar otra con `?palette=atardecer` (no afecta producción). */
 function pick(): Palette {
@@ -74,7 +74,7 @@ export const P: Palette = pick();
 export type CardMode = 'color' | 'dark';
 
 /** Estilo activo en producción. Cámbialo aquí. */
-export const ACTIVE_CARD_MODE: CardMode = 'color';
+export const ACTIVE_CARD_MODE: CardMode = 'dark';
 
 function pickMode(): CardMode {
   try {
