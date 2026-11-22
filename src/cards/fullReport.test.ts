@@ -245,12 +245,18 @@ describe('mazo full vs. free', () => {
   it('el reporte completo tiene su propio mazo, sin mezclar con la historia gratis', () => {
     const free = buildDeck(full);
     const fullDeck = buildDeck(full, 'full');
-    expect(fullDeck).toEqual(['time', 'evolution', 'phrases']);
+    expect(fullDeck).toEqual(expect.arrayContaining(['time', 'evolution', 'phrases']));
+    const order = CARDS.filter((c) => c.tier === 'full').map((c) => c.id);
+    expect(fullDeck).toEqual(order.filter((id) => fullDeck.includes(id))); // respeta el orden de CARDS
     for (const id of fullDeck) expect(free).not.toContain(id);
     for (const id of free) expect(fullDeck).not.toContain(id);
     expect(buildDeck(full, 'free')).toEqual(free);
-    expect(CARDS.filter((c) => c.tier === 'full').map((c) => c.id)).toEqual(['time', 'evolution', 'phrases']);
-    expect(CARDS.filter((c) => c.tier === 'free')).toHaveLength(16);
+    expect(CARDS.filter((c) => c.tier === 'full').map((c) => c.id)).toEqual([
+      'time', 'evolution', 'streaks', 'weekday', 'reply', 'signature', 'phrases', 'media', 'pairs',
+    ]);
+    expect(CARDS.filter((c) => c.tier === 'free').map((c) => c.id)).toEqual([
+      'cover', 'who', 'month', 'hour', 'talk', 'stickers', 'awards', 'quiz', 'summary', 'end',
+    ]);
   });
 
   it('disponibilidad de cada tarjeta', () => {
@@ -314,7 +320,7 @@ describe('dibujo de las tarjetas del reporte completo', () => {
     it(`${mode.rel}/${mode.size}: se dibujan con los 4 temas, rotulan "Reporte completo · N / M" y respetan Ocultar nombres`, () => {
       const data = computeWrapped(fullYear(people, extra), mode);
       const deck: CardId[] = buildDeck(data, 'full');
-      expect(deck).toEqual(['time', 'evolution', 'phrases']);
+      expect(deck).toEqual(expect.arrayContaining(['time', 'evolution', 'phrases']));
       for (const d of [data, hideNames(data)]) {
         for (const theme of ['dark', 'cream', 'lime', 'coral'] as const) {
           deck.forEach((id, i) => {
@@ -343,16 +349,16 @@ describe('dibujo de las tarjetas del reporte completo', () => {
   it('textos clave: tiempo, antes/ahora y frases', () => {
     const data = computeWrapped(fullYear(['Juana', 'Camilo'], ['te amo', 'te quiero', 'te extraño']), PAREJA);
     const t = fakeCtx();
-    drawerOf('time')(t.ctx, data, { index: 1, total: 3, tier: 'full' });
+    drawerOf('time')(t.ctx, data, { index: 1, total: 9, tier: 'full' });
     expect(t.texts).toContain('Cuánto tiempo hablaron');
     expect(t.texts).toContain('Su charla más larga');
     const e = fakeCtx();
-    drawerOf('evolution')(e.ctx, data, { index: 2, total: 3, tier: 'full' });
+    drawerOf('evolution')(e.ctx, data, { index: 2, total: 9, tier: 'full' });
     expect(e.texts).toContain('Antes vs.');
     expect(e.texts).toContain('Mensajes por día');
     expect(e.texts).toContain('Este año empezaron a decir:');
     const p = fakeCtx();
-    drawerOf('phrases')(p.ctx, data, { index: 3, total: 3, tier: 'full' });
+    drawerOf('phrases')(p.ctx, data, { index: 3, total: 9, tier: 'full' });
     expect(p.texts.some((x) => x.startsWith('«'))).toBe(true);
     expect(p.texts).toContain('Sus expresiones, sacadas de su chat');
     expect(p.texts.some((x) => x.startsWith('Juana ·'))).toBe(true);

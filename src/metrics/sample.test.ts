@@ -41,8 +41,8 @@ describe.skipIf(!existsSync(groupFile))('grupo de ejemplo generado', () => {
     expect(w.silence?.days).toBeGreaterThanOrEqual(9);
     expect(w.people.filter((p) => p.signature).length).toBeGreaterThanOrEqual(3);
     const deck = buildDeck(w);
-    expect(deck).toHaveLength(15); // sin stickers reales (solo .txt); incluye el reto y el resumen
-    expect(deck).toContain('pairs');
+    expect(deck).toHaveLength(9); // sin stickers reales (solo .txt); incluye el reto y el resumen
+    expect(buildDeck(w, 'full')).toContain('pairs');
   });
 });
 

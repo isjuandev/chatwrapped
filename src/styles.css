@@ -468,9 +468,24 @@ button {
   height: 3px;
   border-radius: 3px;
   background: var(--line);
+  overflow: hidden;
 }
 .progress i.on {
   background: var(--cream);
+}
+/* El segmento activo se llena con una animación; su `animationend` es lo que avanza la tarjeta. */
+.progress__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--cream);
+  animation-name: story-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes story-fill {
+  from { width: 0; }
+  to { width: 100%; }
 }
 
 .viewer-head {
@@ -485,12 +500,15 @@ button {
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .viewer-head__right {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  flex: none; /* los botones nunca se recortan; si falta espacio cede el texto de la izquierda */
 }
 
 .stage {

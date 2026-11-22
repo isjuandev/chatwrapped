@@ -7,7 +7,7 @@ import { computeWrapped, hideNames } from '../metrics';
 import { pickQuiz } from '../metrics/quiz';
 import { processChat } from '../process';
 import type { Message, StickerIndex, WrappedData } from '../types';
-import { buildDeck, deckThemes, drawerOf } from './deck';
+import { CARDS, buildDeck, deckThemes, drawerOf } from './deck';
 import { monthPhrase } from './cardC';
 import { silenceWhere, streakRange } from './cardE';
 
@@ -121,22 +121,35 @@ function noEqualNeighbors(data: WrappedData): void {
   for (let i = 1; i < themes.length; i++) expect(themes[i]).not.toBe(themes[i - 1]);
 }
 
+describe('reparto de mazos', () => {
+  it('la historia gratis nunca pasa de 10 tarjetas y ninguna está en ambos mazos', () => {
+    expect(CARDS.filter((c) => c.tier === 'free').length).toBeLessThanOrEqual(10);
+    const ids = CARDS.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const msgs = genYear(['Ana', 'Beto', 'Carla', 'Dani', 'Eva'], { stickers: true });
+    const data = computeWrapped(msgs, PARCHE, null, stickerIndexFor(msgs));
+    const free = buildDeck(data, 'free');
+    const full = buildDeck(data, 'full');
+    expect(free.length).toBeLessThanOrEqual(10);
+    for (const id of free) expect(full).not.toContain(id);
+  });
+});
+
 describe('buildDeck', () => {
   it('chat de 3 días en grupo: sin mes, día, rachas, respuestas, firma ni multimedia', () => {
     const data = computeWrapped(parseChat(GROUP_4), PARCHE);
     // El reto no entra aquí: con 3 días de chat ninguna pregunta tiene un ganador claro.
-    expect(buildDeck(data)).toEqual(['cover', 'who', 'hour', 'talk', 'pairs', 'awards', 'summary', 'end']);
+    expect(buildDeck(data)).toEqual(['cover', 'who', 'hour', 'talk', 'awards', 'summary', 'end']);
+    expect(buildDeck(data, 'full')).toContain('pairs');
     noEqualNeighbors(data);
   });
 
   it('pareja de un año sin stickers', () => {
     const data = computeWrapped(genYear(['Juana', 'Camilo']), PAREJA);
     const deck = buildDeck(data);
-    expect(deck).toEqual([
-      'cover', 'who', 'month', 'weekday', 'hour', 'streaks', 'reply', 'talk', 'signature', 'media', 'awards', 'quiz', 'summary', 'end',
-    ]);
+    expect(deck).toEqual(['cover', 'who', 'month', 'hour', 'talk', 'awards', 'quiz', 'summary', 'end']);
     expect(deck).not.toContain('stickers');
-    expect(deck).not.toContain('pairs');
+    expect(buildDeck(data, 'full')).not.toContain('pairs');
     noEqualNeighbors(data);
   });
 
@@ -144,12 +157,12 @@ describe('buildDeck', () => {
     const msgs = genYear(['Ana', 'Beto', 'Carla', 'Dani', 'Eva'], { stickers: true });
     const data = computeWrapped(msgs, PARCHE, null, stickerIndexFor(msgs));
     const deck = buildDeck(data);
-    // genYear reparte todo casi parejo: sin pregunta válida no hay "quiz" (14 + summary).
+    // genYear reparte todo casi parejo: sin pregunta válida no hay "quiz" (la historia queda en 9).
     expect(pickQuiz(data)).toBeNull();
-    expect(deck).toHaveLength(15);
+    expect(deck).toHaveLength(9);
     expect(deck.slice(-3)).toEqual(['awards', 'summary', 'end']);
     expect(deck).toContain('stickers');
-    expect(deck).toContain('pairs');
+    expect(buildDeck(data, 'full')).toContain('pairs');
     expect(data.topStickers.length).toBe(3);
     noEqualNeighbors(data);
   });

@@ -4,6 +4,7 @@ import { buildDeck, cardToBlob, renderCardTo } from '../cards';
 import type { Tier } from '../cards';
 import { FEATURES } from '../config';
 import { fullReportButton } from '../fullReport';
+import { HOLD_MS, storyDurationMs } from '../storyTiming';
 import type { WrappedData } from '../types';
 import type { ZipProgress } from '../zipExport';
 import { allEntries, canIncludeFullReport, deckToZip } from '../zipExport';
@@ -31,6 +32,8 @@ const ICON = {
   share: 'M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M6 12v6a2 2 0 002 2h8a2 2 0 002-2v-6',
   zip: 'M4 7h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7zm0 0l2-3h12l2 3M10 11h4',
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zm10 3a3 3 0 100-6 3 3 0 000 6z',
+  pause: 'M8 5v14M16 5v14',
+  play: 'M8 5l11 7-11 7z',
   eyeOff: 'M3 3l18 18M10.6 5.1A10 10 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 004.2 4.2',
 };
 
@@ -52,9 +55,18 @@ export default function Viewer({ data, onClose }: Props) {
   const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
+  // Avance automático (estilo historias): pausas por botón, por mantener presionado y por pestaña oculta.
+  const [userPaused, setUserPaused] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [tabHidden, setTabHidden] = useState(() => typeof document !== 'undefined' && document.visibilityState === 'hidden');
+  const [nav, setNav] = useState(0); // sube con cada navegación manual: reinicia el tiempo de la tarjeta
+  const holdTimer = useRef<number | undefined>(undefined);
+  const held = useRef(false);
+  const paused = userPaused || holding || tabHidden || busy;
 
   const go = useCallback((d: number) => {
     setRevealed(false);
+    setNav((n) => n + 1);
     setIndex((i) => Math.min(count, Math.max(1, i + d)));
   }, [count]);
 
@@ -74,6 +86,8 @@ export default function Viewer({ data, onClose }: Props) {
 
   const switchTier = (next: Tier): void => {
     setRevealed(false);
+    setNav((n) => n + 1);
+    setUserPaused(false);
     setIndex(1);
     setTier(next);
   };
@@ -90,13 +104,26 @@ export default function Viewer({ data, onClose }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'ArrowRight') go(1);
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        // Sobre un botón, el espacio lo activa a él (no lo duplicamos).
+        if (e.repeat || (e.target as HTMLElement | null)?.closest('button, a, input, select, textarea')) return;
+        e.preventDefault();
+        setUserPaused((p) => !p);
+      } else if (e.key === 'ArrowRight') go(1);
       else if (e.key === 'ArrowLeft') go(-1);
       else if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [go, onClose]);
+
+  useEffect(() => {
+    const onVis = (): void => setTabHidden(document.visibilityState === 'hidden');
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(holdTimer.current), []);
 
   const fileName = `chat-wrapped-${data.year}${full ? '-completo' : ''}-${index}.png`;
 
@@ -154,12 +181,35 @@ export default function Viewer({ data, onClose }: Props) {
     }
   };
 
-  const onPointerDown = (e: React.PointerEvent): void => {
+  const endHold = (): boolean => {
+    window.clearTimeout(holdTimer.current);
+    const was = held.current;
+    held.current = false;
+    if (was) setHolding(false);
+    return was;
+  };
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     start.current = { x: e.clientX, y: e.clientY };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* sin captura: el soltar fuera del escenario se maneja con pointercancel */
+    }
+    window.clearTimeout(holdTimer.current);
+    holdTimer.current = window.setTimeout(() => {
+      held.current = true;
+      setHolding(true);
+    }, HOLD_MS);
+  };
+  const onPointerCancel = (): void => {
+    start.current = null;
+    endHold();
   };
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>): void => {
     const s = start.current;
     start.current = null;
+    // Mantener presionado solo pausa: al soltar reanuda y no navega.
+    if (endHold()) return;
     if (!s) return;
     const dx = e.clientX - s.x;
     const dy = e.clientY - s.y;
@@ -186,19 +236,37 @@ export default function Viewer({ data, onClose }: Props) {
         aria-hidden="true"
         style={{ gridTemplateColumns: `repeat(${count}, 1fr)` }}
       >
-        {Array.from({ length: count }, (_, i) => (
-          <i key={i} className={i < index ? 'on' : ''} />
-        ))}
+        {Array.from({ length: count }, (_, i) => {
+          const n = i + 1;
+          // La última tarjeta se queda con la barra llena: no cierra ni reinicia.
+          const active = n === index && n < count;
+          return (
+            <i key={`${tier}-${n}-${n === index ? nav : 0}`} className={n < index || (n === index && !active) ? 'on' : ''}>
+              {active && (
+                <b
+                  className="progress__fill"
+                  style={{ animationDuration: `${storyDurationMs(deck[i])}ms`, animationPlayState: paused ? 'paused' : 'running' }}
+                  onAnimationEnd={() => go(1)}
+                />
+              )}
+            </i>
+          );
+        })}
       </div>
       <div className="viewer-head">
         <span aria-live="polite">
-          {full ? 'Reporte completo · ' : ''}
+          {full ? 'Completo · ' : ''}
           {index} / {count}
         </span>
         <div className="viewer-head__right">
           {full ? (
-            <button className="chip chip--accent" type="button" onClick={() => switchTier('free')}>
-              Volver a la historia
+            <button
+              className="chip chip--accent"
+              type="button"
+              onClick={() => switchTier('free')}
+              aria-label="Volver a la historia"
+            >
+              ← Historia
             </button>
           ) : (
             <button
@@ -211,6 +279,14 @@ export default function Viewer({ data, onClose }: Props) {
               {fullBtn.enabled ? 'Reporte completo' : fullBtn.label}
             </button>
           )}
+          <button
+            className="icon-btn"
+            onClick={() => setUserPaused((p) => !p)}
+            aria-label={userPaused ? 'Reanudar' : 'Pausar'}
+            type="button"
+          >
+            <Icon d={userPaused ? ICON.play : ICON.pause} />
+          </button>
           <button className="icon-btn" onClick={onClose} aria-label="Cerrar" type="button">
             <Icon d={ICON.close} />
           </button>
@@ -228,7 +304,8 @@ export default function Viewer({ data, onClose }: Props) {
         className="stage"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
-        onPointerCancel={() => (start.current = null)}
+        onPointerCancel={onPointerCancel}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <canvas
           ref={canvas}
