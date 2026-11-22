@@ -6,7 +6,7 @@ import { FEATURES } from '../config';
 import { fullReportButton } from '../fullReport';
 import type { WrappedData } from '../types';
 import type { ZipProgress } from '../zipExport';
-import { deckToZip } from '../zipExport';
+import { allEntries, canIncludeFullReport, deckToZip } from '../zipExport';
 
 interface Props {
   data: WrappedData;
@@ -100,12 +100,12 @@ export default function Viewer({ data, onClose }: Props) {
     }
   };
 
-  /** Todo el mazo visible en un .zip (mismas tarjetas, mismos ajustes). */
+  /** Todo (historia, respuesta del reto y reporte completo si se puede abrir) en un .zip. */
   const onDownloadAll = async (): Promise<void> => {
     setBusy(true);
-    setZipProgress({ done: 0, total: count });
+    setZipProgress({ done: 0, total: allEntries(data, { includeFull: canIncludeFullReport(data) }).length });
     try {
-      const zip = await deckToZip(data, { hide, reveal, tier, onProgress: setZipProgress });
+      const zip = await deckToZip(data, { hide, onProgress: setZipProgress });
       download(zip.blob, zip.name);
       track('download_all');
     } catch {

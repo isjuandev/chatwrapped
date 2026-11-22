@@ -5,7 +5,8 @@ import { computeWrapped } from './metrics';
 import { PAREJA } from './modes';
 import { parseChat } from './parser';
 import { IOS_12H_ES } from './parser/__fixtures__';
-import { CARD_SLUGS, deckBaseName, deckEntryNames, zipBlobs, zipEntryName } from './zipExport';
+import type { WrappedData } from './types';
+import { allEntries, CARD_SLUGS, zipBlobs, zipEntryName } from './zipExport';
 
 /** Lee un .zip en memoria: nombre de entrada → texto. */
 async function readEntries(zip: Blob): Promise<Map<string, string>> {
@@ -23,12 +24,18 @@ async function readEntries(zip: Blob): Promise<Map<string, string>> {
   }
 }
 
-describe('descargar todo en un .zip', () => {
-  it('nombra la carpeta y el archivo según el mazo', () => {
-    expect(deckBaseName(2026, 'free')).toBe('chat-wrapped-2026');
-    expect(deckBaseName(2026, 'full')).toBe('chat-wrapped-2026-completo');
-  });
+/** Fuerza (o quita) el reto: cada persona con todos sus conteos en `value(i)`. */
+function withQuiz(data: WrappedData, value: (i: number) => number): WrappedData {
+  return {
+    ...data,
+    people: data.people.map((p, i) => ({
+      ...p,
+      quiz: Object.fromEntries(Object.keys(p.quiz).map((k) => [k, value(i)])) as unknown as typeof p.quiz,
+    })),
+  };
+}
 
+describe('descargar todo en un .zip', () => {
   it('numera las tarjetas con ceros para conservar el orden', () => {
     expect(zipEntryName('chat-wrapped-2026', 1, 16, 'portada')).toBe('chat-wrapped-2026/01-portada.png');
     expect(zipEntryName('chat-wrapped-2026', 10, 16, 'premios')).toBe('chat-wrapped-2026/10-premios.png');
@@ -41,17 +48,53 @@ describe('descargar todo en un .zip', () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it('arma un archivo por tarjeta del mazo, en orden', () => {
-    const data = computeWrapped(parseChat(IOS_12H_ES), PAREJA);
-    const names = deckEntryNames(data, 'free');
-    const base = deckBaseName(data.year, 'free');
-    expect(names).toHaveLength(buildDeck(data, 'free').length);
-    expect(new Set(names).size).toBe(names.length);
-    expect(names.every((n) => n.startsWith(`${base}/`) && n.endsWith('.png'))).toBe(true);
-    expect([...names].sort()).toEqual(names);
+  it('arma la historia en orden, con la respuesta del reto tras la pregunta', () => {
+    const data = withQuiz(computeWrapped(parseChat(IOS_12H_ES), PAREJA), (i) => (i === 0 ? 10 : 0));
+    const deck = buildDeck(data, 'free');
+    const q = deck.indexOf('quiz');
+    expect(q).toBeGreaterThanOrEqual(0);
+    const entries = allEntries(data, { includeFull: false });
+    const base = `chat-wrapped-${data.year}`;
+    const pad = String(deck.length).length;
+    expect(entries).toHaveLength(deck.length + 1);
+    expect(entries.every((e) => e.tier === 'free' && e.path.startsWith(`${base}/`))).toBe(true);
+    expect(entries.filter((e) => !e.reveal).map((e) => e.n)).toEqual(deck.map((_, i) => i + 1));
+    expect(entries[0].path).toBe(`${base}/${'1'.padStart(pad, '0')}-portada.png`);
 
-    const fullBase = deckBaseName(data.year, 'full');
-    expect(deckEntryNames(data, 'full').every((n) => n.startsWith(`${fullBase}/`))).toBe(true);
+    const nn = String(q + 1).padStart(pad, '0');
+    const i = entries.findIndex((e) => e.path === `${base}/${nn}-reto.png`);
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(entries[i + 1]).toMatchObject({ path: `${base}/${nn}-reto-respuesta.png`, n: q + 1, reveal: true });
+    expect(entries.filter((e) => e.reveal)).toHaveLength(1);
+  });
+
+  it('sin reto en el mazo no hay archivo de respuesta', () => {
+    const data = withQuiz(computeWrapped(parseChat(IOS_12H_ES), PAREJA), () => 0);
+    expect(buildDeck(data, 'free')).not.toContain('quiz');
+    const entries = allEntries(data, { includeFull: false });
+    expect(entries.some((e) => e.reveal || e.path.includes('reto'))).toBe(false);
+    expect(entries).toHaveLength(buildDeck(data, 'free').length);
+  });
+
+  it('incluye la carpeta reporte-completo solo con includeFull', () => {
+    const data = computeWrapped(parseChat(IOS_12H_ES), PAREJA);
+    const without = allEntries(data, { includeFull: false });
+    expect(without.some((e) => e.tier === 'full' || e.path.includes('reporte-completo'))).toBe(false);
+
+    const withFull = allEntries(data, { includeFull: true });
+    const fullDeck = buildDeck(data, 'full');
+    const full = withFull.filter((e) => e.tier === 'full');
+    expect(full).toHaveLength(fullDeck.length);
+    expect(full.map((e) => e.n)).toEqual(fullDeck.map((_, i) => i + 1));
+    expect(full.every((e) => e.path.startsWith(`chat-wrapped-${data.year}/reporte-completo/`) && !e.reveal)).toBe(true);
+    expect(withFull.slice(0, without.length)).toEqual(without);
+  });
+
+  it('todos los nombres son únicos y terminan en .png', () => {
+    const data = computeWrapped(parseChat(IOS_12H_ES), PAREJA);
+    const paths = allEntries(data, { includeFull: true }).map((e) => e.path);
+    expect(new Set(paths).size).toBe(paths.length);
+    expect(paths.every((p) => p.endsWith('.png'))).toBe(true);
   });
 
   it('empaqueta los PNG en orden y reporta el progreso', async () => {
