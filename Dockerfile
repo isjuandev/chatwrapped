@@ -8,6 +8,9 @@ COPY . .
 # Sin valor la app compila igual y la analítica queda desactivada.
 ARG VITE_UMAMI_WEBSITE_ID=""
 ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
+# Tema visual (paleta + estilo de tarjetas). Lista en .env.example. Un nombre inválido hace fallar el build.
+ARG VITE_THEME="atardecer-oscuro"
+ENV VITE_THEME=$VITE_THEME
 RUN npm run build
 
 # ---- Runtime: nginx sirve /dist (no hay backend: el chat nunca sale del celular) ----

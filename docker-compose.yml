@@ -10,6 +10,9 @@ services:
       args:
         # ID del sitio en Umami. Vite lo incrusta en el build: si lo cambias, redeploy.
         VITE_UMAMI_WEBSITE_ID: "${VITE_UMAMI_WEBSITE_ID:-}"
+        # Tema visual: original, original-oscuro, atardecer, atardecer-oscuro, tropico,
+        # tropico-oscuro, cafe, cafe-oscuro. Cambiarlo requiere redeploy (se aplica al compilar).
+        VITE_THEME: "${VITE_THEME:-atardecer-oscuro}"
     restart: unless-stopped
     expose:
       - "80"

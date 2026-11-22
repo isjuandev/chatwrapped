@@ -47,24 +47,6 @@ export const PALETTES = {
 
 export type PaletteId = keyof typeof PALETTES;
 
-/** Paleta activa en producción. Cámbiala aquí. */
-export const ACTIVE_PALETTE: PaletteId = 'atardecer';
-
-/** En desarrollo se puede probar otra con `?palette=atardecer` (no afecta producción). */
-function pick(): Palette {
-  try {
-    if (import.meta.env?.DEV && typeof location !== 'undefined') {
-      const q = new URLSearchParams(location.search).get('palette');
-      if (q && q in PALETTES) return PALETTES[q as PaletteId];
-    }
-  } catch {
-    /* sin location (worker/tests) */
-  }
-  return PALETTES[ACTIVE_PALETTE];
-}
-
-export const P: Palette = pick();
-
 /**
  * Estilo de las tarjetas:
  * - 'color': fondos de color a sangre (acento 1, acento 2, claro), como el diseño original.
@@ -73,19 +55,73 @@ export const P: Palette = pick();
  */
 export type CardMode = 'color' | 'dark';
 
-/** Estilo activo en producción. Cámbialo aquí. */
-export const ACTIVE_CARD_MODE: CardMode = 'dark';
+/**
+ * Temas = paleta + estilo de tarjetas. Se eligen con la variable de entorno `VITE_THEME`
+ * (en tiempo de build; ver .env.example). Sin sufijo = tarjetas de color; `-oscuro` = tarjetas oscuras.
+ */
+export const THEMES_AVAILABLE = [
+  'original', 'original-oscuro',
+  'atardecer', 'atardecer-oscuro',
+  'tropico', 'tropico-oscuro',
+  'cafe', 'cafe-oscuro',
+] as const;
+export type ThemeName = (typeof THEMES_AVAILABLE)[number];
 
-function pickMode(): CardMode {
+/** Tema por defecto si `VITE_THEME` no está definida. */
+export const DEFAULT_THEME: ThemeName = 'atardecer-oscuro';
+
+/** "tropico-oscuro" → { palette: 'tropico', cards: 'dark' }. null si no existe. */
+export function parseTheme(raw: string | undefined | null): { palette: PaletteId; cards: CardMode } | null {
+  const v = (raw ?? '').trim().toLowerCase();
+  if (!(THEMES_AVAILABLE as readonly string[]).includes(v)) return null;
+  const dark = v.endsWith('-oscuro');
+  const palette = (dark ? v.slice(0, -'-oscuro'.length) : v) as PaletteId;
+  return { palette, cards: dark ? 'dark' : 'color' };
+}
+
+/** Lee `VITE_THEME` (vacío → tema por defecto; inválido → por defecto con aviso). */
+function envTheme(): { palette: PaletteId; cards: CardMode } {
+  let raw: string | undefined;
+  try {
+    raw = (import.meta.env?.VITE_THEME as string | undefined) || undefined;
+  } catch {
+    raw = undefined;
+  }
+  const parsed = parseTheme(raw ?? DEFAULT_THEME);
+  if (!parsed) {
+    // El build ya falla con un tema inválido (vite.config.ts); esto es solo por si acaso.
+    console.warn(`VITE_THEME="${raw}" no existe. Usando "${DEFAULT_THEME}".`);
+    return parseTheme(DEFAULT_THEME)!;
+  }
+  return parsed;
+}
+
+const ENV_THEME = envTheme();
+
+/** En desarrollo se puede probar otro con `?palette=tropico&cards=color` (no afecta producción). */
+function devQuery(key: string): string | null {
   try {
     if (import.meta.env?.DEV && typeof location !== 'undefined') {
-      const q = new URLSearchParams(location.search).get('cards');
-      if (q === 'dark' || q === 'color') return q;
+      return new URLSearchParams(location.search).get(key);
     }
   } catch {
     /* sin location (worker/tests) */
   }
-  return ACTIVE_CARD_MODE;
+  return null;
+}
+
+function pick(): Palette {
+  const q = devQuery('palette');
+  if (q && q in PALETTES) return PALETTES[q as PaletteId];
+  return PALETTES[ENV_THEME.palette];
+}
+
+export const P: Palette = pick();
+
+function pickMode(): CardMode {
+  const q = devQuery('cards');
+  if (q === 'dark' || q === 'color') return q;
+  return ENV_THEME.cards;
 }
 
 export const CARD_MODE: CardMode = pickMode();
@@ -104,21 +140,28 @@ export function alpha(hex: string, a: number): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
+/** Variables CSS de la app para una paleta (las usa `applyPaletteToCss` y el build para el HTML inicial). */
+export function cssVars(p: Palette): Record<string, string> {
+  return {
+    '--bg': p.bg,
+    '--surface': p.surface,
+    '--lime': p.lime,
+    '--coral': p.coral,
+    '--cream': p.cream,
+    '--ink': p.ink,
+    '--muted': p.muted,
+    '--line': p.line,
+    '--lime-08': alpha(p.lime, 0.08),
+    '--coral-14': alpha(p.coral, 0.14),
+    '--ink-75': alpha(p.ink, 0.75),
+    '--cream-10': alpha(p.cream, 0.1),
+    '--scrim': alpha(p.bg, 0.7),
+  };
+}
+
 /** Vuelca la paleta activa como variables CSS en :root (la app web usa las mismas). */
 export function applyPaletteToCss(p: Palette = P): void {
   const s = document.documentElement.style;
-  s.setProperty('--bg', p.bg);
-  s.setProperty('--surface', p.surface);
-  s.setProperty('--lime', p.lime);
-  s.setProperty('--coral', p.coral);
-  s.setProperty('--cream', p.cream);
-  s.setProperty('--ink', p.ink);
-  s.setProperty('--muted', p.muted);
-  s.setProperty('--line', p.line);
-  s.setProperty('--lime-08', alpha(p.lime, 0.08));
-  s.setProperty('--coral-14', alpha(p.coral, 0.14));
-  s.setProperty('--ink-75', alpha(p.ink, 0.75));
-  s.setProperty('--cream-10', alpha(p.cream, 0.1));
-  s.setProperty('--scrim', alpha(p.bg, 0.7));
+  for (const [k, v] of Object.entries(cssVars(p))) s.setProperty(k, v);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', p.bg);
 }
