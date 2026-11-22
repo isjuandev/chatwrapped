@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.claude
+*.zip
+!public/sample-with-stickers.zip
+WhatsApp Chat*
+_chat.txt
+design-ref
+*.pdf
+Chat Wrapped*

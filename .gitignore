@@ -1,0 +1,12 @@
+node_modules
+dist
+*.tsbuildinfo
+
+# Chats reales: nunca al repo
+*.zip
+WhatsApp Chat*
+_chat.txt
+!public/sample-with-stickers.zip
+
+# Local de Claude Code
+.claude/settings.local.json

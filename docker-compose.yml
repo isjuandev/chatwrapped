@@ -1,0 +1,19 @@
+# Despliegue en Coolify: crea un recurso "Docker Compose" apuntando a este repo.
+# Coolify pone el proxy (Traefik) y el HTTPS; en el servicio "web" asigna el dominio
+# https://wrapped.isjuandev.com (puerto 80). No se publican puertos en el host.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      # Coolify usa esta variable para enrutar el dominio al puerto 80 del contenedor.
+      - SERVICE_FQDN_WEB_80
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
