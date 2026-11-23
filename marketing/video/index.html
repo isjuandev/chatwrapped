@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="es" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Chat Wrapped - promo vertical</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Inter Tight"; font-weight: 800; src: url("assets/fonts/inter-tight-latin-800-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Inter Tight"; font-weight: 700; src: url("assets/fonts/inter-tight-latin-700-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Inter"; font-weight: 400; src: url("assets/fonts/inter-latin-400-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Inter"; font-weight: 600; src: url("assets/fonts/inter-latin-600-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Inter"; font-weight: 700; src: url("assets/fonts/inter-latin-700-normal.woff2") format("woff2"); }
+
+      :root {
+        --bg: #1a1029;
+        --bg-deep: #0d0716;
+        --surface: #2a1d3f;
+        --mango: #ffb830;
+        --pink: #ff6b9a;
+        --cream: #fff4e8;
+        --muted: #b9a9d0;
+        --line: #4d3d66;
+        --head: "Inter Tight", "Inter", sans-serif;
+        --body: "Inter", sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg-deep); }
+      body { font-family: var(--body); color: var(--cream); }
+      #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--bg-deep); }
+      .scene { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+      .mango { color: var(--mango); }
+      .pink { color: var(--pink); }
+
+      /* ---------------- S1: hook ---------------- */
+      #s1 { z-index: 10; background: var(--bg-deep); }
+      #s1a { position: absolute; inset: 0; }
+      #s1b { position: absolute; inset: 0; opacity: 0; visibility: hidden;
+        background: radial-gradient(900px 700px at 50% 62%, rgba(255,184,48,.22), transparent 70%), var(--bg); transform-origin: 50% 50%; }
+      .b { position: absolute; left: 0; top: 0; padding: 22px 36px; border-radius: 48px; font: 700 54px/1.1 var(--body); color: var(--bg);
+        white-space: nowrap; opacity: 0; transform-origin: 50% 50%; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+      .b.c1 { background: var(--cream); border-bottom-left-radius: 14px; }
+      .b.c2 { background: var(--mango); border-bottom-right-radius: 14px; }
+      .b.c3 { background: var(--pink); border-bottom-left-radius: 14px; }
+      .b.c4 { background: var(--surface); color: var(--cream); border: 3px solid var(--line); border-bottom-right-radius: 14px; }
+      .b .wave { display: inline-flex; align-items: center; gap: 6px; margin-left: 18px; vertical-align: middle; }
+      .b .wave i { display: block; width: 8px; border-radius: 4px; background: currentColor; opacity: .85; }
+      .b .tri { display: inline-block; width: 0; height: 0; border-left: 34px solid currentColor; border-top: 21px solid transparent; border-bottom: 21px solid transparent; vertical-align: middle; }
+      .b.stk { padding: 14px; border-radius: 40px; }
+      .stk-face { position: relative; width: 150px; height: 150px; border-radius: 50%; background: var(--mango); box-shadow: inset 0 0 0 7px rgba(0,0,0,.18); }
+      .stk-face.p { background: var(--pink); }
+      .stk-face i { position: absolute; top: 48px; width: 17px; height: 17px; border-radius: 50%; background: var(--bg); }
+      .stk-face i:nth-child(1) { left: 42px; } .stk-face i:nth-child(2) { right: 42px; }
+      .stk-face u { position: absolute; left: 38px; top: 72px; width: 74px; height: 40px; border: 8px solid var(--bg); border-top: 0; border-radius: 0 0 80px 80px; }
+      #cntBox { position: absolute; left: 0; width: 1080px; top: 790px; text-align: center; }
+      #cntBox::before { content: ""; position: absolute; left: 60px; right: 60px; top: -30px; bottom: -30px; border-radius: 80px;
+        background: radial-gradient(closest-side, rgba(13,7,22,.96), rgba(13,7,22,.88) 70%, rgba(13,7,22,0)); }
+      #cnt, #cntLbl { position: relative; }
+      #cnt { font: 800 250px/1 var(--head); letter-spacing: -0.05em; color: var(--mango); font-variant-numeric: tabular-nums; }
+      #cntLbl { font: 700 74px/1 var(--head); letter-spacing: -0.02em; color: var(--cream); margin-top: 6px; }
+      .hk { position: absolute; left: 0; width: 1080px; text-align: center; font: 800 146px/0.94 var(--head); letter-spacing: -0.055em; color: var(--cream); opacity: 0; }
+      #hk73 { position: absolute; left: 0; width: 1080px; text-align: center; top: 860px; font: 800 400px/0.9 var(--head); letter-spacing: -0.07em; color: var(--mango); opacity: 0; }
+      #hk73sub { position: absolute; left: 0; width: 1080px; text-align: center; top: 1300px; font: 700 58px/1.1 var(--head); letter-spacing: -0.02em; color: var(--cream); opacity: 0; }
+      #hk73sub b { color: var(--pink); font-weight: 800; }
+
+      /* ---------------- fondo + teléfono ---------------- */
+      #bgGlow { position: absolute; inset: 0; z-index: 5; background: var(--bg); overflow: hidden; }
+      #bgGlow i { position: absolute; border-radius: 50%; }
+      #g1 { left: -300px; top: 120px; width: 900px; height: 900px; background: radial-gradient(closest-side, rgba(255,184,48,.30), transparent); }
+      #g2 { left: 500px; top: 900px; width: 1000px; height: 1000px; background: radial-gradient(closest-side, rgba(255,107,154,.28), transparent); }
+      #pg { position: absolute; left: 176px; top: 187px; width: 728px; height: 1545px; z-index: 20; border-radius: 98px;
+        background: #07040d; box-shadow: 0 0 0 3px var(--line), 0 50px 120px rgba(0,0,0,.6), 0 0 160px rgba(255,184,48,.16); transform-origin: 50% 50%; }
+      #scr { position: absolute; left: 14px; top: 14px; width: 700px; height: 1517px; border-radius: 86px; overflow: hidden; background: var(--bg); }
+      .lay { position: absolute; left: 0; top: 0; width: 700px; height: 1517px; opacity: 0; }
+      img.lay { object-fit: fill; display: block; }
+
+      /* chat de WhatsApp (mock) */
+      #L_chat { background: #150d22; }
+      .ch-head { position: absolute; left: 0; top: 0; width: 700px; height: 170px; background: var(--surface); display: flex; align-items: flex-end; padding: 0 28px 24px; gap: 22px; }
+      .ch-av { width: 78px; height: 78px; border-radius: 50%; background: linear-gradient(135deg, var(--mango), var(--pink)); }
+      .ch-name { font: 700 36px/1.1 var(--body); color: var(--cream); }
+      .ch-sub { font: 400 26px/1.2 var(--body); color: var(--muted); }
+      .ch-dots { position: absolute; right: 36px; top: 60px; width: 64px; height: 64px; border-radius: 32px; display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(255,255,255,.06); }
+      .ch-dots i { display: block; width: 9px; height: 9px; border-radius: 50%; background: var(--cream); }
+      .m { position: absolute; padding: 18px 28px; border-radius: 34px; font: 600 36px/1.15 var(--body); color: var(--bg); }
+      .m.l { left: 28px; background: var(--cream); border-top-left-radius: 10px; }
+      .m.r { right: 28px; background: var(--mango); border-top-right-radius: 10px; }
+      .m.r.pk { background: var(--pink); }
+      .ch-in { position: absolute; left: 24px; right: 24px; bottom: 40px; height: 90px; border-radius: 45px; background: var(--surface); border: 2px solid var(--line); padding: 26px 36px; font: 400 32px/1.2 var(--body); color: var(--muted); }
+      .menu { position: absolute; left: 338px; top: 128px; width: 330px; border-radius: 30px; background: #382850; box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 2px var(--line); opacity: 0; overflow: hidden; transform-origin: 100% 0; }
+      .menu div { height: 84px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; font: 600 34px/1 var(--body); color: var(--cream); }
+      .menu div + div { border-top: 2px solid rgba(255,255,255,.07); }
+      #finger { position: absolute; left: 0; top: 0; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: rgba(255,244,232,.92); box-shadow: 0 8px 26px rgba(0,0,0,.5); opacity: 0; z-index: 60; }
+      .rip { position: absolute; left: 0; top: 0; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%; border: 7px solid var(--mango); opacity: 0; z-index: 59; }
+
+      .zipic { position: absolute; left: 0; top: 0; width: 250px; height: 310px; margin: -155px 0 0 -125px; border-radius: 34px; background: var(--surface); border: 9px solid var(--mango); box-shadow: 0 30px 70px rgba(0,0,0,.5), 0 0 60px rgba(255,184,48,.35); opacity: 0; z-index: 61; }
+      .zipic::before { content: ""; position: absolute; top: 0; left: 50%; width: 38px; margin-left: -19px; height: 150px; background: repeating-linear-gradient(180deg, var(--mango) 0 14px, var(--surface) 14px 28px); }
+      .zipic::after { content: ""; position: absolute; top: 118px; left: 50%; width: 56px; height: 70px; margin-left: -28px; border-radius: 16px; background: var(--pink); box-shadow: inset 0 0 0 7px rgba(26,16,41,.35); }
+      .zipic span { position: absolute; left: 0; right: 0; bottom: 26px; text-align: center; font: 800 54px/1 var(--head); letter-spacing: -0.03em; color: var(--cream); }
+
+      #dzGlow { position: absolute; left: 39px; top: 1053px; width: 622px; height: 358px; border-radius: 44px; border: 6px dashed var(--mango); box-shadow: 0 0 60px rgba(255,184,48,.5), inset 0 0 50px rgba(255,184,48,.2); opacity: 0; z-index: 30; }
+      #flash { position: absolute; inset: 0; background: var(--cream); opacity: 0; z-index: 20; }
+
+      /* títulos */
+      .ov { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 30; }
+      .ttl { position: absolute; left: 60px; width: 960px; top: 290px; height: 130px; display: flex; align-items: center; justify-content: center; text-align: center;
+        font: 800 92px/1 var(--head); letter-spacing: -0.045em; color: var(--cream); opacity: 0; white-space: nowrap; word-spacing: 0.15em; }
+      .ttl .step { display: inline-flex; flex: none; width: 100px; height: 100px; border-radius: 50px; background: var(--mango); color: var(--bg); align-items: center; justify-content: center; font: 800 66px/1 var(--head); margin-right: 22px; letter-spacing: 0; }
+
+      #lockOv { z-index: 40; background: radial-gradient(900px 800px at 50% 50%, rgba(255,184,48,.16), transparent 70%), #0d0716; }
+      #lockBadge { position: absolute; left: 390px; top: 545px; width: 300px; height: 300px; border-radius: 150px; background: var(--mango); box-shadow: 0 0 120px rgba(255,184,48,.55); opacity: 0; }
+      #lockBadge svg { position: absolute; left: 70px; top: 62px; }
+      #lockTxt { position: absolute; left: 70px; width: 940px; top: 905px; text-align: center; font: 800 112px/1.02 var(--head); letter-spacing: -0.055em; color: var(--cream); opacity: 0; word-spacing: 0.15em; }
+      #lockSub { position: absolute; left: 80px; width: 920px; top: 1325px; text-align: center; font: 600 52px/1.15 var(--body); color: var(--muted); opacity: 0; }
+
+      /* grid reporte completo */
+      #gridOv { z-index: 35; background: var(--bg); }
+      .gc { position: absolute; width: 225px; height: 400px; border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 2px var(--line), 0 20px 40px rgba(0,0,0,.45); opacity: 0; }
+      .gc img { width: 225px; height: 400px; display: block; }
+      #plus8 { position: absolute; left: 0; width: 1080px; top: 1250px; text-align: center; font: 800 220px/0.9 var(--head); letter-spacing: -0.07em; color: var(--mango); opacity: 0; }
+      #plus8b { position: absolute; left: 0; width: 1080px; top: 1472px; text-align: center; font: 800 58px/1 var(--head); letter-spacing: -0.035em; color: var(--cream); opacity: 0; word-spacing: 0.2em; }
+
+      /* S5 */
+      #s5 { z-index: 32; }
+      #s5cap { position: absolute; left: 60px; width: 960px; top: 250px; height: 200px; display: flex; align-items: center; justify-content: center; text-align: center; font: 800 92px/0.98 var(--head); letter-spacing: -0.05em; color: var(--cream); opacity: 0; word-spacing: 0.15em; }
+      .fc { position: absolute; left: 390px; top: 1100px; width: 300px; height: 533px; border-radius: 26px; overflow: hidden; box-shadow: 0 0 0 3px var(--line), 0 30px 60px rgba(0,0,0,.5); opacity: 0; }
+      .fc img { width: 300px; height: 533px; display: block; }
+      #sentPill { position: absolute; left: 330px; top: 1695px; width: 420px; height: 90px; border-radius: 45px; background: var(--mango); color: var(--bg); text-align: center; font: 800 50px/90px var(--head); letter-spacing: -0.02em; opacity: 0; }
+      #zipBig { left: 540px; top: 790px; }
+      #s5big { position: absolute; left: 0; width: 1080px; top: 1070px; text-align: center; font: 800 196px/0.9 var(--head); letter-spacing: -0.06em; color: var(--mango); opacity: 0; }
+      #s5sub { position: absolute; left: 0; width: 1080px; top: 1290px; text-align: center; font: 800 98px/1 var(--head); letter-spacing: -0.045em; color: var(--cream); opacity: 0; word-spacing: 0.2em; }
+
+      /* S6 */
+      #s6 { z-index: 50; background: radial-gradient(1000px 900px at 50% 50%, rgba(255,184,48,.2), transparent 70%), var(--bg); }
+      #logoW { position: absolute; left: 0; width: 1080px; top: 487px; text-align: center; font: 800 206px/0.88 var(--head); letter-spacing: -0.065em; color: var(--cream); opacity: 0; transform-origin: 50% 50%; }
+      #logoW span { color: var(--mango); }
+      #yr { position: absolute; left: 440px; top: 890px; width: 200px; height: 72px; border-radius: 36px; border: 4px solid var(--mango); color: var(--mango); text-align: center; font: 800 44px/64px var(--head); opacity: 0; }
+      #cta1 { position: absolute; left: 0; width: 1080px; top: 1042px; text-align: center; font: 800 104px/1.02 var(--head); letter-spacing: -0.05em; color: var(--cream); opacity: 0; word-spacing: 0.15em; }
+      #cta2 { position: absolute; left: 90px; width: 900px; top: 1198px; height: 140px; border-radius: 70px; background: var(--mango); color: var(--bg); text-align: center; font: 800 70px/140px var(--head); letter-spacing: -0.035em; opacity: 0; }
+      #cta3 { position: absolute; left: 0; width: 1080px; top: 1378px; text-align: center; font: 700 56px/1 var(--head); letter-spacing: -0.02em; color: var(--muted); opacity: 0; word-spacing: 0.15em; }
+      #cta3 svg { vertical-align: -6px; margin-right: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="43" data-width="1080" data-height="1920">
+
+      <!-- ===================== S1 · HOOK ===================== -->
+      <div id="s1" class="scene clip" data-start="0.0" data-duration="5.775" data-track-index="0">
+        <div id="s1a" data-layout-ignore></div>
+        <div id="cntBox" data-layout-ignore><div id="cnt">0</div><div id="cntLbl">mensajes</div></div>
+        <div id="s1b">
+          <div class="hk" id="hkA" style="top:330px">Tu chat sabe</div>
+          <div class="hk" id="hkB" style="top:490px; color:var(--mango)">quién quiere</div>
+          <div class="hk" id="hkC" style="top:650px; color:var(--pink)">más.</div>
+          <div id="hk73">73%</div>
+          <div id="hk73sub">de los <b>“te amo”</b> los dice uno.</div>
+        </div>
+      </div>
+
+      <!-- ===================== fondo + teléfono (S2 - S5) ===================== -->
+      <div id="bgGlow" class="clip" data-start="5.695" data-duration="32.54" data-track-index="1"><i id="g1"></i><i id="g2"></i></div>
+
+      <div id="pg" class="clip" data-start="5.695" data-duration="32.54" data-track-index="3">
+        <div id="scr">
+          <!-- chat de WhatsApp (mock) -->
+          <div id="L_chat" class="lay" style="opacity:1" data-layout-ignore>
+            <div class="ch-head"><div class="ch-av"></div><div><div class="ch-name">Mi persona favorita 💛</div><div class="ch-sub">en línea</div></div>
+              <div class="ch-dots" id="dotsBtn"><i></i><i></i><i></i></div></div>
+            <div class="m l" style="top:210px">¿ya llegaste?</div>
+            <div class="m r" style="top:325px">ya casi 🥺</div>
+            <div class="m l" style="top:440px">te amo 🥺</div>
+            <div class="m r pk" style="top:555px">jajaja ❤️</div>
+            <div class="m l" style="top:670px">¿cenamos algo rico?</div>
+            <div class="m r" style="top:785px">dale, tú escoges 😍</div>
+            <div class="m l" style="top:900px">no me dejes en visto 😤</div>
+            <div class="m r pk" style="top:1015px">jajajaja nunca</div>
+            <div class="m l" style="top:1130px">te extraño ❤️</div>
+            <div class="m r" style="top:1245px">yo más 🥰</div>
+            <div class="ch-in">Escribe un mensaje</div>
+            <div class="menu" id="menu1"><div>Buscar</div><div>Silenciar</div><div id="itMas">Más <span style="opacity:.7">›</span></div></div>
+            <div class="menu" id="menu2"><div>Reportar</div><div id="itExp">Exportar chat</div><div>Vaciar chat</div></div>
+          </div>
+          <!-- pantallas reales de la app -->
+          <img id="L_landing" class="lay" src="assets/screens/landing.png" alt="" />
+          <img id="L_upload" class="lay" src="assets/screens/upload.png" alt="" />
+          <img id="L_proc" class="lay" src="assets/screens/processing.png" alt="" />
+          <img id="V_02" class="lay" src="assets/screens/v02.png" alt="" />
+          <img id="V_04" class="lay" src="assets/screens/v04.png" alt="" />
+          <img id="V_05" class="lay" src="assets/screens/v05.png" alt="" />
+          <img id="V_06" class="lay" src="assets/screens/v06.png" alt="" />
+          <img id="V_07" class="lay" src="assets/screens/v07.png" alt="" />
+          <img id="V_08" class="lay" src="assets/screens/v08.png" alt="" />
+          <img id="V_08a" class="lay" src="assets/screens/v08-answer.png" alt="" />
+          <img id="V_09" class="lay" src="assets/screens/v09.png" alt="" />
+          <img id="V_10" class="lay" src="assets/screens/v10.png" alt="" />
+          <div id="dzGlow"></div>
+          <div id="flash"></div>
+          <div class="rip" id="rip"></div>
+          <div id="finger"></div>
+          <div class="zipic" id="zipA"><span>.zip</span></div>
+        </div>
+      </div>
+
+      <!-- títulos S2 / S3 -->
+      <div id="capS2" class="ov clip" data-layout-ignore data-start="5.695" data-duration="5.08" data-track-index="4">
+        <div class="ttl" id="cap1"><span class="step">1</span>Exporta tu chat</div>
+        <div class="ttl" id="cap2">Te llega un&nbsp;<span class="mango">.zip</span></div>
+      </div>
+      <div id="capS3" class="ov clip" data-layout-ignore data-start="10.775" data-duration="3.06" data-track-index="4">
+        <div class="ttl" id="cap3"><span class="step">2</span>Súbelo a la app</div>
+      </div>
+
+      <!-- privacidad -->
+      <div id="lockOv" class="ov clip" data-start="13.835" data-duration="2.03" data-track-index="5">
+        <div id="lockBadge"><svg width="160" height="180" viewBox="0 0 24 24" fill="none" stroke="#1a1029" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div>
+        <div id="lockTxt">Tu chat nunca sale de <span class="mango">tu celular.</span></div>
+        <div id="lockSub">Todo pasa en tu navegador.</div>
+      </div>
+
+      <!-- grid reporte completo -->
+      <div id="gridOv" class="ov clip" data-start="30.105" data-duration="4.07" data-track-index="6">
+        <div class="gc" id="gc1" style="left:60px;top:380px"><img src="assets/full/01.png" alt="" /></div>
+        <div class="gc" id="gc2" style="left:305px;top:380px"><img src="assets/full/02.png" alt="" /></div>
+        <div class="gc" id="gc3" style="left:550px;top:380px"><img src="assets/full/03.png" alt="" /></div>
+        <div class="gc" id="gc4" style="left:795px;top:380px"><img src="assets/full/04.png" alt="" /></div>
+        <div class="gc" id="gc5" style="left:60px;top:800px"><img src="assets/full/05.png" alt="" /></div>
+        <div class="gc" id="gc6" style="left:305px;top:800px"><img src="assets/full/06.png" alt="" /></div>
+        <div class="gc" id="gc7" style="left:550px;top:800px"><img src="assets/full/07.png" alt="" /></div>
+        <div class="gc" id="gc8" style="left:795px;top:800px"><img src="assets/full/08.png" alt="" /></div>
+        <div id="plus8">+8</div>
+        <div id="plus8b">tarjetas en el reporte completo</div>
+      </div>
+
+      <!-- ===================== S5 · compartir (sobre el teléfono) ===================== -->
+      <div id="s5" class="ov clip" data-start="34.175" data-duration="4.06" data-track-index="7">
+        <div id="s5cap"><span>Compártelas en tus&nbsp;<span class="mango">historias</span></span></div>
+        <div class="fc" id="fc1"><img src="assets/cards/02-who.png" alt="" /></div>
+        <div class="fc" id="fc2"><img src="assets/cards/06-stickers.png" alt="" /></div>
+        <div class="fc" id="fc3"><img src="assets/cards/08-quiz-answer.png" alt="" /></div>
+        <div id="sentPill">Enviado ✓</div>
+        <div class="zipic" id="zipBig"><span>.zip</span></div>
+        <div id="s5big">1 toque</div>
+        <div id="s5sub">todas en <span class="mango">.zip</span></div>
+      </div>
+
+      <!-- ===================== S6 · CTA ===================== -->
+      <div id="s6" class="scene clip" data-start="38.235" data-duration="4.765" data-track-index="8">
+        <div id="logoW">chat<br /><span>wrapped</span></div>
+        <div id="yr">2026</div>
+        <div id="cta1">Hazlo con tu chat</div>
+        <div id="cta2">wrapped.isjuandev.com</div>
+        <div id="cta3"><svg width="46" height="52" viewBox="0 0 24 24" fill="none" stroke="#b9a9d0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Gratis · sin subir nada</div>
+      </div>
+
+      <!-- CUE:START (generado) -->
+    <script>window.CUE = {"boom1":1.6,"w_line2":2.135,"w_line3":2.645,"slam73":3.155,"sub73":3.655,"swipe_s2":5.695,"swipe2a":5.545,"cap1":5.695,"tap1":6.205,"menu1":6.285,"tap2":7.215,"menu2":7.295,"tap3":8.235,"zipPop":8.745,"cap2":8.745,"zipFly":10.275,"swipe_s3":10.775,"swipe3a":10.625,"cap3":10.775,"tapStart":11.295,"uploadIn":11.375,"zipDrop":11.395,"zipLand":11.795,"procIn":12.305,"lockHit":13.835,"swipe_s4":15.865,"swipe4a":15.715,"c_who":15.865,"c_hour":16.885,"c_talk":17.905,"c_stick":19.425,"c_awards":20.445,"c_quiz":21.965,"quizRiser":21.965,"tapQuiz":23.495,"reveal":24.005,"c_sum":26.035,"c_end":28.075,"tapFull":29.595,"gridIn":30.105,"g1":30.105,"g2":30.36,"g3":30.615,"g4":30.87,"g5":31.125,"g6":31.375,"g7":31.625,"g8":31.88,"plus8":32.135,"swipe_s5":34.175,"swipe5a":34.025,"tapShare":34.675,"f1":34.93,"f2":35.185,"f3":35.44,"sent":35.44,"tapZip":35.95,"zipSlam":36.205,"zipBig1":36.46,"zipText":36.715,"swipe_s6":38.235,"swipe6a":38.085,"logo":38.235,"cta1":39.255,"cta2":39.765,"cta3":40.275,"final":40.775};</script>
+    <!-- CUE:END -->
+      <!-- AUDIO:START (generado por tools/build-cues.mjs) -->
+    <audio id="a-boom1" src="assets/sfx/boom_small.wav" data-start="1.6" data-duration="0.7" data-track-index="10" data-volume="0.35"></audio>
+    <audio id="a-slam73" src="assets/sfx/pop_big.wav" data-start="3.155" data-duration="0.2" data-track-index="11" data-volume="0.45"></audio>
+    <audio id="a-swipe2a" src="assets/sfx/swipe.wav" data-start="5.545" data-duration="0.38" data-track-index="12" data-volume="0.3"></audio>
+    <audio id="a-tap1" src="assets/sfx/click.wav" data-start="6.205" data-duration="0.09" data-track-index="13" data-volume="0.4"></audio>
+    <audio id="a-tap2" src="assets/sfx/click.wav" data-start="7.215" data-duration="0.09" data-track-index="14" data-volume="0.4"></audio>
+    <audio id="a-tap3" src="assets/sfx/click.wav" data-start="8.235" data-duration="0.09" data-track-index="15" data-volume="0.4"></audio>
+    <audio id="a-zipPop" src="assets/sfx/pop_big.wav" data-start="8.745" data-duration="0.2" data-track-index="10" data-volume="0.45"></audio>
+    <audio id="a-zipFly" src="assets/sfx/whoosh_up.wav" data-start="10.275" data-duration="0.6" data-track-index="11" data-volume="0.3"></audio>
+    <audio id="a-swipe3a" src="assets/sfx/swipe.wav" data-start="10.625" data-duration="0.38" data-track-index="12" data-volume="0.3"></audio>
+    <audio id="a-tapStart" src="assets/sfx/click.wav" data-start="11.295" data-duration="0.09" data-track-index="13" data-volume="0.4"></audio>
+    <audio id="a-zipDrop" src="assets/sfx/whoosh_down.wav" data-start="11.395" data-duration="0.5" data-track-index="14" data-volume="0.3"></audio>
+    <audio id="a-zipLand" src="assets/sfx/thud.wav" data-start="11.795" data-duration="0.4" data-track-index="15" data-volume="0.4"></audio>
+    <audio id="a-lockHit" src="assets/sfx/lock.wav" data-start="13.835" data-duration="0.7" data-track-index="10" data-volume="0.45"></audio>
+    <audio id="a-swipe4a" src="assets/sfx/swipe.wav" data-start="15.715" data-duration="0.38" data-track-index="11" data-volume="0.3"></audio>
+    <audio id="a-quizRiser" src="assets/sfx/riser.wav" data-start="21.965" data-duration="1.7" data-track-index="12" data-volume="0.25"></audio>
+    <audio id="a-tapQuiz" src="assets/sfx/click.wav" data-start="23.495" data-duration="0.09" data-track-index="13" data-volume="0.4"></audio>
+    <audio id="a-reveal" src="assets/sfx/sting_reveal.wav" data-start="24.005" data-duration="1.3" data-track-index="14" data-volume="0.4"></audio>
+    <audio id="a-tapFull" src="assets/sfx/click.wav" data-start="29.595" data-duration="0.09" data-track-index="15" data-volume="0.4"></audio>
+    <audio id="a-plus8" src="assets/sfx/pop_big.wav" data-start="32.135" data-duration="0.2" data-track-index="10" data-volume="0.4"></audio>
+    <audio id="a-swipe5a" src="assets/sfx/swipe.wav" data-start="34.025" data-duration="0.38" data-track-index="11" data-volume="0.3"></audio>
+    <audio id="a-tapShare" src="assets/sfx/click.wav" data-start="34.675" data-duration="0.09" data-track-index="12" data-volume="0.4"></audio>
+    <audio id="a-sent" src="assets/sfx/ding.wav" data-start="35.44" data-duration="1.1" data-track-index="13" data-volume="0.3"></audio>
+    <audio id="a-tapZip" src="assets/sfx/click.wav" data-start="35.95" data-duration="0.09" data-track-index="14" data-volume="0.4"></audio>
+    <audio id="a-zipSlam" src="assets/sfx/pop_big.wav" data-start="36.205" data-duration="0.2" data-track-index="15" data-volume="0.45"></audio>
+    <audio id="a-swipe6a" src="assets/sfx/swipe.wav" data-start="38.085" data-duration="0.38" data-track-index="10" data-volume="0.3"></audio>
+    <audio id="a-logo" src="assets/sfx/pop_big.wav" data-start="38.235" data-duration="0.2" data-track-index="11" data-volume="0.45"></audio>
+    <audio id="a-final" src="assets/sfx/sparkle.wav" data-start="40.775" data-duration="1" data-track-index="12" data-volume="0.35"></audio>
+    <!-- AUDIO:END -->
+    </div>
+
+    <script>
+      const C = window.CUE;
+      const tl = gsap.timeline({ paused: true });
+      const FT = (sel, from, to, t) => tl.fromTo(sel, from, Object.assign({ immediateRender: false }, to), t);
+      const SET = (sel, vars, t) => tl.set(sel, vars, t);
+      const $ = (s) => document.querySelector(s);
+      function rng(seed) { return function () { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+      const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      // golpe corto: arranca en el cue y casi todo el movimiento ocurre en los primeros frames
+      const HIT = "expo.out";
+      const hit = (sel, from, to, t, d) => FT(sel, from, Object.assign({ duration: d || 0.18, ease: HIT }, to), t);
+
+      /* ============ S1 · HOOK ============ */
+      const R = rng(1337);
+      const TXT = ["jajaja", "te amo 🥺", "¿ya llegaste?", "buenos días 🌞", "ya casi llego", "jajajaja", "qué haces", "te extraño ❤️",
+        "AUDIO", "STK", "😂😂", "mira esto", "llámame", "¿ya comiste?", "🥺", "te amo ❤️", "no me dejes en visto 😤", "ya voy",
+        "AUDIO", "jajajajaja", "STKP", "qué hambre", "te adoro", "ven ya", "😭", "amor", "qué boba jajaja", "te amo mucho", "buenas noches 🌙",
+        "AUDIO", "STK", "dale pues", "jajaja ay no", "mi vida", "¿y tú?", "😍😍", "te amo 🥺", "ya salí", "jajaja", "te amo ❤️"];
+      const N = 40; const s1a = $("#s1a");
+      const bubbles = [];
+      for (let i = 0; i < N; i++) {
+        const k = TXT[i % TXT.length]; const el = document.createElement("div");
+        const cls = ["c1", "c2", "c3", "c4"][Math.floor(R() * 4)];
+        el.className = "b " + cls;
+        const fs = 50 + Math.round((i / N) * 34);
+        el.dataset.fs = fs;
+        el.style.fontSize = fs + "px";
+        if (k === "AUDIO") { el.innerHTML = '<span class="tri"></span><span class="wave">' + [14, 30, 20, 40, 26, 46, 22, 34, 16, 28, 38, 18].map((h) => '<i style="height:' + h + 'px"></i>').join("") + '</span><span style="margin-left:20px;font-size:.7em">0:' + (20 + Math.floor(R() * 40)) + "</span>"; }
+        else if (k === "STK" || k === "STKP") { el.classList.add("stk"); el.innerHTML = '<div class="stk-face ' + (k === "STKP" ? "p" : "") + '"><i></i><i></i><u></u></div>'; }
+        else el.textContent = k;
+        el._fx = R(); el._fy = R(); el._rot = (R() - 0.5) * 10; // +-5 grados
+        s1a.appendChild(el); bubbles.push(el);
+      }
+      // coloca cada burbuja ENTERA dentro de x 48-1032 / y 120-1800 (considera la rotación)
+      function layoutBubbles() {
+        bubbles.forEach((el) => {
+          let fs = +el.dataset.fs; el.style.fontSize = fs + "px";
+          while (el.offsetWidth > 940 && fs > 20) { fs -= 2; el.style.fontSize = fs + "px"; }
+          const w = el.offsetWidth, h = el.offsetHeight, a = Math.abs(el._rot) * Math.PI / 180;
+          const hw = (w * Math.cos(a) + h * Math.sin(a)) / 2, hh = (w * Math.sin(a) + h * Math.cos(a)) / 2;
+          const cx = 48 + hw + el._fx * (984 - 2 * hw), cy = 120 + hh + el._fy * (1680 - 2 * hh);
+          el.style.left = Math.round(cx - w / 2) + "px"; el.style.top = Math.round(cy - h / 2) + "px";
+        });
+      }
+      layoutBubbles();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutBubbles);
+      bubbles.forEach((el, i) => {
+        const t = 0.05 + 1.5 * Math.pow(i / (N - 1), 2.0);
+        if (i < 4) { SET(el, { opacity: 1, scale: 1, rotation: el._rot }, 0); return; }
+        FT(el, { opacity: 0, scale: 0.3, rotation: el._rot * 2 }, { opacity: 1, scale: 1, rotation: el._rot, duration: 0.16, ease: "back.out(2.2)" }, t);
+      });
+      const cnt = { v: 0 };
+      tl.to(cnt, { v: 31871, duration: 1.5, ease: "power3.in", onUpdate() { $("#cnt").textContent = fmt(Math.round(cnt.v)); } }, 0.1);
+      // corte duro en boom1
+      SET("#s1a", { autoAlpha: 0 }, C.boom1);
+      SET("#cntBox", { autoAlpha: 0 }, C.boom1);
+      SET("#s1b", { autoAlpha: 1 }, C.boom1);
+      FT("#s1b", { scale: 1.06 }, { scale: 1, duration: 0.15, ease: "power3.out" }, C.boom1);
+      hit("#hkA", { opacity: 1, scale: 1.6 }, { opacity: 1, scale: 1 }, C.boom1, 0.16);
+      hit("#hkB", { opacity: 0, scale: 1.4, y: 30 }, { opacity: 1, scale: 1, y: 0 }, C.w_line2, 0.16);
+      hit("#hkC", { opacity: 0, scale: 1.4, y: 30 }, { opacity: 1, scale: 1, y: 0 }, C.w_line3, 0.16);
+      hit("#hk73", { opacity: 1, scale: 2.2, rotation: -4 }, { opacity: 1, scale: 1, rotation: 0 }, C.slam73, 0.2);
+      FT("#s1b", { scale: 1.06 }, { scale: 1, duration: 0.15, ease: "power3.out" }, C.slam73);
+      hit("#hk73sub", { opacity: 0, y: 40 }, { opacity: 1, y: 0 }, C.sub73, 0.2);
+      // salida del hook (rápida, el teléfono entra en swipe_s2)
+      tl.to("#s1", { opacity: 0, duration: 0.07, ease: "none" }, C.swipe_s2);
+
+      /* ============ Teléfono: poses ============ */
+      const POSE_TITLE = { scale: 0.74, y: 130, x: 0 }, POSE_FULL = { scale: 1, y: 0, x: 0 };
+      gsap.set("#pg", Object.assign({ transformOrigin: "50% 50%", opacity: 1 }, POSE_TITLE));
+      const finger = "#finger", rip = "#rip";
+      function tap(x, y, t) {
+        FT(finger, { x: x + 70, y: y + 120, opacity: 0, scale: 1 }, { x, y, opacity: 1, duration: 0.24, ease: "power2.out" }, t - 0.28);
+        tl.to(finger, { scale: 0.78, duration: 0.07 }, t - 0.05);
+        tl.to(finger, { scale: 1, duration: 0.14 }, t + 0.03);
+        tl.to(finger, { opacity: 0, duration: 0.2 }, t + 0.2);
+        FT(rip, { x, y, scale: 0.2, opacity: 0.95 }, { x, y, scale: 1.7, opacity: 0, duration: 0.5, ease: "power2.out" }, t);
+      }
+      // cambio de pantalla: la nueva entra con un desliz corto (aterriza en landT) y la anterior se apaga en landT
+      function show(id, from, landT, dur) {
+        const d = dur || 0.16;
+        FT(id, { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: d, ease: "power3.out" }, landT - d);
+        if (from) SET(from, { opacity: 0 }, landT);
+      }
+
+      /* ============ S2 · exporta (mock de WhatsApp) ============ */
+      FT("#pg", { y: 350, opacity: 0, scale: 0.74 }, { y: 130, opacity: 1, scale: 0.74, duration: 0.18, ease: "power3.out" }, C.swipe_s2);
+      hit("#cap1", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.cap1);
+      tap(668, 92, C.tap1);
+      hit("#menu1", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1 }, C.menu1, 0.2);
+      tap(540, 338, C.tap2);
+      tl.to("#itMas", { backgroundColor: "rgba(255,184,48,.35)", duration: 0.08 }, C.tap2);
+      SET("#menu1", { opacity: 0 }, C.menu2);
+      hit("#menu2", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1 }, C.menu2, 0.18);
+      tap(540, 254, C.tap3);
+      tl.to("#itExp", { backgroundColor: "rgba(255,184,48,.55)", duration: 0.08 }, C.tap3);
+      SET("#menu2", { opacity: 0 }, C.tap3 + 0.3);
+      SET("#cap1", { opacity: 0 }, C.zipPop);
+      hit("#cap2", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.cap2);
+      // el zip aparece en el centro de la pantalla
+      FT("#zipA", { x: 350, y: 760, scale: 0.2, opacity: 0, rotation: -10 }, { x: 350, y: 760, scale: 1.4, opacity: 1, rotation: 0, duration: 0.2, ease: "back.out(2.2)" }, C.zipPop);
+      tl.to("#L_chat", { opacity: 0.25, duration: 0.2 }, C.zipPop);
+      tl.to("#zipA", { x: 1100, y: 520, rotation: 24, scale: 1.0, duration: 0.4, ease: "power3.in" }, C.zipFly);
+
+      /* ============ S3 · app real: landing -> subir -> leyendo -> privacidad ============ */
+      SET("#cap2", { opacity: 0 }, C.swipe_s3);
+      SET("#zipA", { opacity: 0 }, C.swipe_s3);
+      hit("#cap3", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.cap3);
+      show("#L_landing", "#L_chat", C.swipe_s3);
+      tap(350, 1365, C.tapStart);
+      FT("#L_upload", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.16, ease: "power3.out" }, C.uploadIn);
+      SET("#L_landing", { opacity: 0 }, C.uploadIn + 0.16);
+      FT("#dzGlow", { opacity: 0 }, { opacity: 1, duration: 0.2 }, C.zipDrop);
+      FT("#zipA", { x: 350, y: -200, scale: 1.6, opacity: 0, rotation: -14 }, { x: 350, y: 1232, scale: 1.0, opacity: 1, rotation: 0, duration: 0.4, ease: "power3.in" }, C.zipDrop);
+      tl.to("#zipA", { scaleY: 0.85, scaleX: 1.1, duration: 0.07, yoyo: true, repeat: 1 }, C.zipLand);
+      tl.to("#zipA", { scale: 0.001, opacity: 0, duration: 0.2, ease: "power2.in" }, C.zipLand + 0.14);
+      tl.to("#dzGlow", { opacity: 0, duration: 0.15 }, C.zipLand + 0.12);
+      FT("#L_proc", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.16, ease: "power3.out" }, C.procIn);
+      SET("#L_upload", { opacity: 0 }, C.procIn + 0.16);
+      // privacidad (a pantalla completa); debajo el teléfono se prepara en pose Full
+      hit("#lockBadge", { opacity: 0, scale: 0.4, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0 }, C.lockHit, 0.2);
+      hit("#lockTxt", { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1 }, C.lockHit, 0.16);
+      hit("#lockSub", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.lockHit + 0.35, 0.25);
+      SET("#pg", Object.assign({ opacity: 0 }, POSE_FULL), C.lockHit + 0.1);
+      SET("#L_proc", { opacity: 0 }, C.lockHit + 0.1);
+
+      /* ============ S4 · visor real ============ */
+      FT("#pg", { x: 70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.18, ease: "power3.out" }, C.swipe_s4);
+      SET("#V_02", { opacity: 1 }, C.swipe_s4);
+      const NEXT = [619, 733];
+      const flow = [["#V_04", "#V_02", C.c_hour], ["#V_05", "#V_04", C.c_talk], ["#V_06", "#V_05", C.c_stick],
+        ["#V_07", "#V_06", C.c_awards], ["#V_08", "#V_07", C.c_quiz], ["#V_09", "#V_08a", C.c_sum], ["#V_10", "#V_09", C.c_end]];
+      flow.forEach(([id, prev, t]) => { tap(NEXT[0], NEXT[1], t - 0.08); show(id, prev, t); });
+      tap(579, 1367, C.tapQuiz);
+      FT("#flash", { opacity: 0.85 }, { opacity: 0, duration: 0.3, ease: "power2.out" }, C.reveal);
+      SET("#V_08a", { opacity: 1 }, C.reveal);
+      SET("#V_08", { opacity: 0 }, C.reveal + 0.02);
+      tap(402, 73, C.tapFull);
+      tl.to("#g1", { x: 260, duration: 14, ease: "none" }, C.swipe_s4);
+
+      /* ============ Grid: reporte completo ============ */
+      SET("#V_10", { opacity: 0 }, C.gridIn);
+      SET("#pg", Object.assign({ opacity: 0 }, POSE_TITLE), C.gridIn + 0.1);
+      SET("#V_09", { opacity: 1 }, C.gridIn + 0.1);
+      for (let i = 1; i <= 8; i++) {
+        const dx = (i % 2 ? -1 : 1) * 40, rotF = ((i * 37) % 5) - 2;
+        hit("#gc" + i, { opacity: 0, x: dx, y: 260, rotation: (i % 2 ? -1 : 1) * 6, scale: 0.8 }, { opacity: 1, x: 0, y: 0, rotation: rotF, scale: 1 }, C["g" + i], 0.18);
+      }
+      hit("#plus8", { opacity: 0, scale: 1.5, y: 30 }, { opacity: 1, scale: 1, y: 0 }, C.plus8, 0.18);
+      hit("#plus8b", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.plus8 + 0.12, 0.22);
+
+      /* ============ S5 · compartir ============ */
+      FT("#pg", { x: 70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.18, ease: "power3.out" }, C.swipe_s5);
+      hit("#s5cap", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.swipe_s5);
+      tap(249, 1455, C.tapShare);
+      ["f1", "f2", "f3"].forEach((f, k) => {
+        const id = "#fc" + (k + 1);
+        FT(id, { opacity: 1, x: 0, y: 160, scale: 0.55, rotation: 0 }, { x: (k - 1) * 330, y: -1500, scale: 0.9, rotation: (k - 1) * 24, duration: 0.45, ease: "power2.in" }, C[f]);
+        SET(id, { opacity: 0 }, C[f] + 0.5);
+      });
+      hit("#sentPill", { opacity: 0, scale: 0.5, y: 20 }, { opacity: 1, scale: 1, y: 0 }, C.sent, 0.2);
+      tap(638, 1455, C.tapZip);
+      SET("#sentPill", { opacity: 0 }, C.zipSlam);
+      SET("#s5cap", { opacity: 0 }, C.zipSlam);
+      tl.to("#pg", { scale: 0.5, opacity: 0, duration: 0.18, ease: "power3.in" }, C.zipSlam);
+      FT("#zipBig", { opacity: 0, scale: 0.3, rotation: -12 }, { opacity: 1, scale: 1.5, rotation: 0, duration: 0.2, ease: "back.out(2.2)" }, C.zipSlam);
+      hit("#s5big", { opacity: 0, scale: 1.6, y: 30 }, { opacity: 1, scale: 1, y: 0 }, C.zipBig1, 0.2);
+      hit("#s5sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.zipText, 0.22);
+
+      /* ============ S6 · CTA ============ */
+      FT("#logoW", { opacity: 1, scale: 1.1 }, { opacity: 1, scale: 1, duration: 0.15, ease: "power3.out" }, C.logo);
+      hit("#yr", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1 }, C.logo + 0.2, 0.2);
+      hit("#cta1", { opacity: 0, y: 40, scale: 1.1 }, { opacity: 1, y: 0, scale: 1 }, C.cta1, 0.2);
+      hit("#cta2", { opacity: 0, y: 40, scale: 0.85 }, { opacity: 1, y: 0, scale: 1 }, C.cta2, 0.22);
+      hit("#cta3", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, C.cta3, 0.25);
+      FT("#cta2", { boxShadow: "0 0 0px rgba(255,184,48,0)" }, { boxShadow: "0 0 90px rgba(255,184,48,.6)", duration: 0.3, ease: "power2.out" }, C.final);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

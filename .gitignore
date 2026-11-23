@@ -15,3 +15,8 @@ _chat.txt
 .env
 .env.*
 !.env.example
+
+# Música con derechos de autor: solo local, nunca al repo
+*.mp3
+*.m4a
+*.wav.music
